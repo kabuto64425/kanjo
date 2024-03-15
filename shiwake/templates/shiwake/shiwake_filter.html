@@ -18,10 +18,13 @@
                 {% include "_pagination.html" %}
             </div>
         </div>
+        {% for shiwake in shiwake_list %}
+            {{shiwake.name}}
+        {% endfor %}
         <div class="row">
             <div class="col-12">
                 <ul class="list-group">
-                    {% for shiwake in shiwake_list %}
+                    {% for shiwake in object_list %}
                         <li class="list-group-item">
                             {# 必要な項目を追加してください #}
                             <div class="row">
