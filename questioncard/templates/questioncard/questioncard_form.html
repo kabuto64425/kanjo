@@ -1,0 +1,48 @@
+{% extends "_base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {{ form.certifications.errors }}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center">登録・更新</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a class="btn btn-outline-dark" href="{% url 'question_card_list' deck_pk %}">戻る</a>
+                    </div>
+                    <div>
+                        <a class="btn btn-outline-dark save" href="#">保存</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <form method="post" id="myform">
+                    {% crispy form %}
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const div_id_question_text = document.getElementById("div_id_question_text");
+            const question_text_count = document.createElement("div");
+            question_text_count.id = "id_question_text_count"
+            question_text_count.style.textAlign = "right";
+
+            const question_text = document.getElementById("id_question_text");
+
+            question_text_count.textContent = question_text.value.length + "文字";
+            div_id_question_text.appendChild(question_text_count);
+
+            question_text.addEventListener('input', function(){
+                question_text_count.textContent = question_text.value.length + "文字";
+            });
+        });
+    </script>
+{% endblock %}

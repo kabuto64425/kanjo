@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% load socialaccount %}
+{% block meta_viewport %}
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0">
+{% endblock %}
+{% block body_tag %}
+<body style="touch-action: manipulation;">
+{% endblock %}
+{% block content %}
+    {% load static %}
+    <div id="app" class="container-xl">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        {% if user.is_authenticated %}
+                        <a class="btn btn-outline-dark {% if user != owner%}invisible{% endif %}" href="{% url 'deck_list' %}">戻る</a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if not user.is_authenticated %}
+                        <a class="btn btn-outline-dark" href="{% provider_login_url 'google' %}">ログイン</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-5" style="min-height: 400px;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center">
+                        <span class="display-custom">終了</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "./operations.html" %}
+    </div>
+{% endblock %}

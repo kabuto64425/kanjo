@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+
+<form class="mt-3" method="post">
+  {% csrf_token %}
+  <input type="image" src="{% static "icons/btn_google_signin_dark_normal_web.png" %}" />
+</form>
+{% endblock %}

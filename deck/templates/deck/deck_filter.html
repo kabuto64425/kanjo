@@ -1,0 +1,111 @@
+{% extends "_base.html" %}
+{% block content %}
+    {% load static %}
+    {% load crispy_forms_tags %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a class="btn btn-outline-dark" href="{% url 'index' %}">戻る</a>
+                    </div>
+                    <div>
+                        <a class="btn btn-outline-dark" href="{% url 'deck_create' %}">新規</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-10 mx-auto">
+                {% include "_pagination.html" %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <ul class="list-group">
+                    {% for deck in deck_list %}
+                        <li class="list-group-item">
+                            {# 必要な項目を追加してください #}
+                            <div class="row">
+                                <div class="col-4 col-sm-3">
+                                    <p>デッキ名</p>
+                                </div>
+                                <div class="col-8 col-sm-9">
+                                    <p>{{ deck.deck_name|default_if_none:"未入力" }}</p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-4 col-sm-3">
+                                    <div class="h-100 d-flex align-items-center">
+                                        <span style="display: inline-block; vertical-align: middle;">{{deck.in_deck.all|length}}問</span>
+                                    </div>
+                                </div>
+                                <div class="col-8 col-sm-9">
+                                    {% if deck.in_deck.all|length > 0 and deck.public_flag %}
+                                    <div class="d-flex justify-content-end">
+                                        <div class="d-inline" style="margin-top: 10px;">
+                                            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="問題文推理クイズのデッキ「{{ deck.deck_name|default_if_none:'未入力' }}」を公開しました。" data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'ask_question_top' deck.pk %}" data-show-count="false" data-size="small">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                                        </div>
+                                        <div class="fb-share-button" style="margin-top: 6px;" data-href="{{ request.scheme }}://{{ request.get_host }}{% url 'ask_question_top' deck.pk %}" data-layout="button"></div>
+                                        <div class="d-inline">
+                                            <img class="copy_url" style="height: 25px; margin-top: 6px; cursor: pointer;" src="{% static "icons/clipboard-check.svg" %}" data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'ask_question_top' deck.pk %}"></img>
+                                            <span class="message hidden" style="bottom: 30px; right:0px;">copied!</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4 col-sm-3">
+                                    {% if deck.in_deck.all|length > 0 %}
+                                    <a class="btn btn-outline-dark " href="{% url 'ask_question_top' deck.pk %}">出題</a>
+                                    {% endif %}
+                                </div>                                
+                                <div class="col-8 col-sm-9">
+                                    <div class="d-flex justify-content-end">
+                                        <a class="btn btn-outline-dark " href="{% url 'question_card_list' deck.pk %}">問題</a>
+                                        <a class="btn btn-outline-dark " href="{% url 'deck_update' deck.pk %}">編集</a>
+                                        <a class="btn btn-outline-dark " href="{% url 'deck_delete' deck.pk %}">削除</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">
+                            対象のデータがありません
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-10 mx-auto">
+                {% include "_pagination.html" %}
+            </div>
+        </div>
+    </div>
+    <script>
+        console.log(document.getElementsByClassName("copy_url"));
+        Array.from(document.getElementsByClassName("copy_url")).forEach(function(elm){
+            elm.addEventListener("click", function(eve){
+                navigator.clipboard.writeText(elm.dataset.url);
+                item = elm.closest(".list-group-item");
+                message = item.getElementsByClassName("message")[0];
+                message.classList.remove('hidden');
+                message.classList.add('popup-message');
+            });
+        });
+        function copyUrl() {
+            var url = location.href;
+            navigator.clipboard.writeText(url);
+            message.classList.remove('hidden');
+            message.classList.add('popup-message');
+        }
+        Array.from(document.getElementsByClassName("message")).forEach(function(elm){
+            elm.addEventListener('animationend', () => {
+                elm.classList.remove('popup-message');
+                elm.classList.add('hidden');
+            });
+        });
+    </script>
+{% endblock %}

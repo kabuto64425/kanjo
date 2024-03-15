@@ -1,0 +1,86 @@
+{% extends "_base.html" %}
+{% load socialaccount %}
+{% block meta_viewport %}
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0">
+{% endblock %}
+{% block body_tag %}
+<body style="touch-action: manipulation;">
+{% endblock %}
+{% block content %}
+    {% load static %}
+    <div id="app" class="container-xl">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        {% if user.is_authenticated %}
+                        <a class="btn btn-outline-dark {% if user != owner%}invisible{% endif %}" href="{% url 'deck_list' %}">戻る</a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if not user.is_authenticated %}
+                        <a class="btn btn-outline-dark" href="{% provider_login_url 'google' %}">ログイン</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="question_text_field" class="mb-5" style="min-height: 400px;">
+            <div class="row">
+                <div class="col"></div>
+                <div class="col text-center display-4">
+                    <span>[[countClosePanels()]]/[[panels.length]]</span>
+                </div>
+                <div class="col d-flex align-items-center"><img style="height: 48px; cursor: pointer;" src="{% static "icons/lightbulb.svg" %}" @click="eventClickLight()"></img></div>
+            </div>
+            <div class="row mt-3">
+                <div v-for="(panel, index) in panels" class="col-2 col-lg-1 p-1" @click="open(index)">
+                    <div class="embed-responsive embed-responsive-1by1 border d-flex align-items-center justify-content-center m-0 display-custom" :class="[panel.isOpen? 'alert alert-light' : 'alert alert-dark']" style="cursor: pointer; user-select: none;">
+                        <span class="text-dark" v-if="panel.isOpen">[[panel.chara]]</span>
+                        <span v-else>[[index + 1]]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "./operations.html" %}
+    </div>
+    <script>
+        const questionText = "{{ questioncard.question_text }}";
+        const splitedQuestionTextFromServer = questionText.split("");
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    panels : splitedQuestionTextFromServer.map((c)=>{
+                        return {
+                            chara: c,
+                            isOpen: false
+                        }
+                    }),
+                }
+            },
+            methods: {
+                open: function(index) {
+                    this.panels[index].isOpen = !this.panels[index].isOpen;
+                },
+                eventClickLight: function(){
+                    if(this.panels.every((element) => element.isOpen)) {
+                        this.closeAll();
+                    } else {
+                        this.openAll();
+                    }
+                },
+                openAll: function() {
+                    this.panels.forEach((element) => element.isOpen = true);
+                },
+                closeAll:function() {
+                    this.panels.forEach((element) => element.isOpen = false);
+                },
+                countClosePanels() {
+                    return this.panels.filter(panel=>!panel.isOpen).length;
+                }
+            },
+            delimiters: ['[[', ']]']
+        }).mount("#app");
+    </script>
+{% endblock %}
