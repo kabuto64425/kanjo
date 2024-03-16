@@ -27,7 +27,7 @@ class Shiwake(models.Model):
         blank=True,
         null=True,
         related_name='shiwake_owner',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         editable=False,
     )
 
