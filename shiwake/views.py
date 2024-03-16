@@ -4,17 +4,25 @@ from utils.mixins import CustomLoginRequiredMixin
 from django_filters.views import FilterView
 from .models import Shiwake
 
-class MyClass:
-    def __init__(self, name):
-        self.name = name            # インスタンス変数
+import logging
+
+logger = logging.getLogger(__name__)
+
+class ShiwakeEntity:
+    def __init__(self, shiwake):
+        self.shiwake_date = shiwake.shiwake_date
+
+        kanjo_list = shiwake.kanjos.all()
+        self.kari_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == True]
+        self.kashi_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == False]
+
+        self.kari_amount_sum = sum([kanjo.amount for kanjo in self.kari_kanjo_list])
+        self.kashi_amount_sum = sum([kanjo.amount for kanjo in self.kashi_kanjo_list])
 
 # Create your views here.
 class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
 
     model = Shiwake
-
-    # 1ページの表示
-    paginate_by = 10
 
     def get(self, request, **kwargs):
         """
@@ -23,12 +31,20 @@ class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
         """
         return super().get(request, **kwargs)
     
-    def get_context_data(self, *, shiwake_list=None, **kwargs):
+    def get_queryset(self):
+        """
+        ソート順・デフォルトの絞り込みを指定
+        """
+        user = self.request.user  # ログインユーザーモデルの取得
+        return Shiwake.objects.prefetch_related('kanjos').filter(owner = user).order_by('shiwake_date')
+    
+    def get_context_data(self, *, object_list=None, **kwargs):
         """
         表示データの設定
         """
         # 表示データを追加したい場合は、ここでキーを追加しテンプレート上で表示する
         # 例：kwargs['sample'] = 'sample'
-        context = super().get_context_data(shiwake_list=shiwake_list, **kwargs)
-        context['shiwake_list'] = [MyClass("test") for shiwake in Shiwake.objects.all()]
+        context = super().get_context_data(object_list=object_list, **kwargs)
+
+        context['shiwake_entity_list'] = [ShiwakeEntity(shiwake) for shiwake in context['shiwake_list']]
         return context
