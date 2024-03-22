@@ -1,8 +1,17 @@
+from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
+from django.urls import reverse_lazy
+from django.utils import timezone
 from utils.mixins import CustomLoginRequiredMixin
 
+from django.views.generic.edit import CreateView, UpdateView ,DeleteView
+from extra_views import InlineFormSetFactory, CreateWithInlinesView, UpdateWithInlinesView
 from django_filters.views import FilterView
-from .models import Shiwake
+from .models import Shiwake, Kanjo
+from .forms import ShiwakeForm
+
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Row, Column, Layout
 
 import logging
 
@@ -48,3 +57,54 @@ class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
 
         context['shiwake_entity_list'] = [ShiwakeEntity(shiwake) for shiwake in context['shiwake_list']]
         return context
+    
+class Child1Inline(InlineFormSetFactory):
+    model = Kanjo
+    fields = '__all__'
+    factory_kwargs = {'extra': 5,'can_order': False, 'can_delete': False}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(Column('kanjo_kamoku', css_class='form-group col-md-6 mb-0'),)
+        )
+
+class Child2Inline(InlineFormSetFactory):
+    model = Kanjo
+    fields = '__all__'
+    factory_kwargs = {'extra': 5,'can_order': False, 'can_delete': False}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(Column('kanjo_kamoku', css_class='form-group col-md-6 mb-0'),)
+        )
+
+#class Child2Inline(InlineFormSetFactory):
+#    model = Kanjo
+#    fields = '__all__'
+#    factory_kwargs = {'extra': 5,'can_order': False, 'can_delete': False}
+
+class ShiwakeCreateView(CustomLoginRequiredMixin, CreateWithInlinesView):
+    """
+    ビュー：登録画面
+    """
+    model = Shiwake
+    #inlines = [Child1Inline, Child2Inline]
+    inlines = [Child1Inline, Child2Inline]
+    form_class = ShiwakeForm
+    success_url = reverse_lazy('shiwake_list')
+
+    def form_valid(self, form):
+        """
+        登録処理
+        """
+        shiwake = form.save(commit=False)
+        shiwake.owner = self.request.user
+        shiwake.created_at = timezone.now()
+        shiwake.updated_at = timezone.now()
+        shiwake.save()
+
+        return HttpResponseRedirect(self.success_url)

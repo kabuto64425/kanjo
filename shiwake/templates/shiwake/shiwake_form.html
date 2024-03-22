@@ -1,0 +1,47 @@
+{% extends "_base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {{ form.certifications.errors }}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center">登録・更新</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a class="btn btn-outline-dark" href="{% url 'shiwake_list' %}">戻る</a>
+                    </div>
+                    <div>
+                        <a class="btn btn-outline-dark save" href="#">保存</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <form method="post" id="myform">
+                    {% crispy form %}
+                    <div class="row">
+                        {% for formset in inlines %}
+                            <div class="col">
+                            {% for form2 in formset %}                     
+                                <div class="row">
+                                    <div class="col">
+                                        {{ form2.kanjo_kamoku | as_crispy_field }}
+                                    </div>
+                                    <div class="col">
+                                        {{ form2.amount | as_crispy_field }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
