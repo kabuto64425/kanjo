@@ -101,6 +101,7 @@ class ShiwakeCreateView(CustomLoginRequiredMixin, CreateWithInlinesView):
         """
         登録処理
         """
+        logger.info("saving")
         shiwake = form.save(commit=False)
         shiwake.owner = self.request.user
         shiwake.created_at = timezone.now()
