@@ -24,22 +24,6 @@
             <div class="col-12">
                 <form method="post" id="myform">
                     {% crispy form %}
-                    <div class="row">
-                        {% for formset in inlines %}
-                            <div class="col">
-                            {% for form2 in formset %}                     
-                                <div class="row">
-                                    <div class="col">
-                                        {{ form2.kanjo_kamoku | as_crispy_field }}
-                                    </div>
-                                    <div class="col">
-                                        {{ form2.amount | as_crispy_field }}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                            </div>
-                        {% endfor %}
-                    </div>
                 </form>
             </div>
         </div>
