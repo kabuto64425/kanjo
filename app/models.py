@@ -2,6 +2,27 @@ from django.db import models
 
 from users.models import User
 
+class MasterKanjoKamoku(models.Model):
+    TYPE = (
+            (1, '資産'),
+            (2, '負債'),
+            (3, '純資産'),
+            (4, '費用'),
+            (5, '収益'),
+    )
+
+    name = models.CharField(
+        verbose_name='勘定科目名',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+
+    kamoku_type = models.IntegerField(
+        blank=False,
+        null=False,
+        choices=TYPE
+    )
 
 class Item(models.Model):
     """

@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import User
+from app.models import MasterKanjoKamoku
 
 # Create your models here.
 class Shiwake(models.Model):
@@ -63,11 +64,13 @@ class Kanjo(models.Model):
         help_text='借方ならTrue'
     )
 
-    kanjo_kamoku = models.CharField(
+    kanjo_kamoku = models.ForeignKey(
+        MasterKanjoKamoku,
         verbose_name='勘定科目',
-        max_length=20,
         blank=False,
         null=False,
+        related_name='master_kanjo_kamokus',
+        on_delete=models.PROTECT,
     )
 
     amount = models.IntegerField(
@@ -83,7 +86,6 @@ class Kanjo(models.Model):
         null=False,
         related_name='kanjos',
         on_delete=models.CASCADE,
-        #editable=False,
     )
 
     class Meta:

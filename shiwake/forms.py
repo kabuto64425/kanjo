@@ -2,18 +2,18 @@ from django import forms
 from .models import Shiwake, Kanjo
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Row, Column, Layout, HTML
+from crispy_forms.layout import Row, Column, Layout, HTML, Field
 
 class TestForm(forms.Form):
     shiwake_date = forms.DateField(label = '仕訳日')
 
     def __init__(self, *args, **kwargs):
         super(TestForm, self).__init__(*args, **kwargs)
-        for i in range(1, 11):  # 10個のフィールドを追加
-            self.fields[f'kari_kanjo_kamoku_{i}'] = forms.CharField(label=f"勘定科目", max_length=100)
-            self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"金額")
-            self.fields[f'kashi_kanjo_kamoku_{i}'] = forms.CharField(label=f"勘定科目", max_length=100)
-            self.fields[f'kashi_amount_{i}'] = forms.IntegerField(label=f"金額")
+        for i in range(1, 6):  # 10個のフィールドを追加
+            self.fields[f'kari_kanjo_kamoku_{i}'] = forms.CharField(label=f"", max_length=100)
+            self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"")
+            self.fields[f'kashi_kanjo_kamoku_{i}'] = forms.CharField(label=f"", max_length=100)
+            self.fields[f'kashi_amount_{i}'] = forms.IntegerField(label=f"")
         
         self.helper = FormHelper()
         rows = [Row(
@@ -22,10 +22,13 @@ class TestForm(forms.Form):
                 Column(f'kashi_kanjo_kamoku_{i}', css_class='form-group col-md-3 mb-0'),
                 Column(f'kashi_amount_{i}', css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'
-            ) for i in range(1, 11)]
+            ) for i in range(1, 6)]
         self.helper.layout = Layout(
             Row(
-                Column('shiwake_date', css_class='form-group col'),
+                Column(
+                    Field('shiwake_date')
+                    , css_class='form-group col'
+                ),
                 css_class='form-row'
             ),
             Row(

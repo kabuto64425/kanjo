@@ -1,10 +1,19 @@
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import Shiwake, Kanjo
 
 @admin.register(Shiwake)
 class ShiwakeAdmin(admin.ModelAdmin):
     readonly_fields = ('owner',)
+        
+    def save_model(self, request, obj, form, change):
+        # update_dateを現在時刻に更新
+        obj.owner = request.user
+        obj.created_at = timezone.now()
+        obj.updated_at = timezone.now()
+        # save_model関数をオーバーライドしてデータベースに変更を反映
+        super(ShiwakeAdmin, self).save_model(request, obj, form, change)
     
     """
     管理画面上の動作の設定
