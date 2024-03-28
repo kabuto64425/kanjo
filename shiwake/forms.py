@@ -2,6 +2,7 @@ from django import forms
 from .models import Shiwake, Kanjo
 from app.models import MasterKanjoKamoku
 from config.consts import KANJO_ROWS
+from django.core import validators
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Row, Column, Layout, HTML, Field
@@ -17,9 +18,9 @@ class TestForm(forms.Form):
         super(TestForm, self).__init__(*args, **kwargs)
         for i in range(1, KANJO_ROWS + 1):
             self.fields[f'kari_kanjo_kamoku_{i}'] = forms.ModelChoiceField(label=f"", queryset=MasterKanjoKamoku.objects, required=False)
-            self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"", required=False)
+            self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"", required=False, validators=[validators.MinValueValidator(0)])
             self.fields[f'kashi_kanjo_kamoku_{i}'] = forms.ModelChoiceField(label=f"", queryset=MasterKanjoKamoku.objects, required=False)
-            self.fields[f'kashi_amount_{i}'] = forms.IntegerField(label=f"", required=False)
+            self.fields[f'kashi_amount_{i}'] = forms.IntegerField(label=f"", required=False, validators=[validators.MinValueValidator(0)])
         
         self.helper = FormHelper()
         rows = [Row(
@@ -43,6 +44,36 @@ class TestForm(forms.Form):
             ),
             *rows
         )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        for i in range(1, KANJO_ROWS + 1):
+            # 借方
+            if not cleaned_data.get(f'kari_kanjo_kamoku_{i}') and cleaned_data.get(f'kari_amount_{i}'):
+                self.add_error(f'kari_kanjo_kamoku_{i}', '勘定科目を入力してください')
+                #raise forms.ValidationError("Field1とField2の値が一致しません。")
+            if cleaned_data.get(f'kari_kanjo_kamoku_{i}') and not cleaned_data.get(f'kari_amount_{i}'):
+                self.add_error(f'kari_amount_{i}', '金額を入力してください')
+                #raise forms.ValidationError("Field1とField2の値が一致しません。")
+            # 貸方
+            if not cleaned_data.get(f'kashi_kanjo_kamoku_{i}') and cleaned_data.get(f'kashi_amount_{i}'):
+                self.add_error(f'kashi_kanjo_kamoku_{i}', '勘定科目を入力してください')
+                #raise forms.ValidationError("Field1とField2の値が一致しません。")
+            if cleaned_data.get(f'kashi_kanjo_kamoku_{i}') and not cleaned_data.get(f'kashi_amount_{i}'):
+                self.add_error(f'kashi_amount_{i}', '金額を入力してください')
+                #raise forms.ValidationError("Field1とField2の値が一致しません。")
+        
+        # もしすでにエラーがある場合は処理をスキップする
+        if self.errors:
+            return cleaned_data
+        
+        # TODO貸借一致チェック
+        for i in range(1, KANJO_ROWS + 1):
+                pass
+                #for cleaned_data.get(f'kari_amount_{i}')
+        
+        self.add_error(None, 'aaaaa')
+        return cleaned_data
     
     def is_valid(self):
         valid = super().is_valid()
