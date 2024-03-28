@@ -24,6 +24,9 @@ class MasterKanjoKamoku(models.Model):
         choices=TYPE
     )
 
+    def __str__(self):
+        return self.name
+
 class Item(models.Model):
     """
     データ定義クラス

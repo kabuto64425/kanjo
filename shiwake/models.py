@@ -15,8 +15,8 @@ class Shiwake(models.Model):
     # 日付
     shiwake_date = models.DateField(
         verbose_name='日付',
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
     )
 
     # 以下、管理項目
@@ -25,8 +25,8 @@ class Shiwake(models.Model):
     owner = models.ForeignKey(
         User,
         verbose_name='所有者',
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         related_name='shiwake_owner',
         on_delete=models.CASCADE,
         editable=False,
@@ -35,16 +35,16 @@ class Shiwake(models.Model):
     # 作成時間
     created_at = models.DateTimeField(
         verbose_name='作成時間',
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         editable=False,
     )
 
     # 更新時間
     updated_at = models.DateTimeField(
         verbose_name='更新時間',
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         editable=False,
     )
 

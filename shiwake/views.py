@@ -11,6 +11,7 @@ from extra_views import InlineFormSetFactory, CreateWithInlinesView, UpdateWithI
 from django_filters.views import FilterView
 from .models import Shiwake, Kanjo
 from .forms import ShiwakeForm, ShiwakeForm_temp2, TestForm
+from config.consts import KANJO_ROWS
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Row, Column, Layout
@@ -96,8 +97,29 @@ class TestFormView(FormView):
             shiwake.owner = self.request.user
             shiwake.created_at = timezone.now()
             shiwake.updated_at = timezone.now()
-            shiwake.shiwake_date = form.cleaned_data["shiwake_date"]
+            shiwake.shiwake_date = form.cleaned_data.get('shiwake_date')
             shiwake.save()
+
+            # 借方
+            for i in range(1, KANJO_ROWS + 1):
+                if form.cleaned_data.get(f'kari_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kari_amount_{i}'):
+                    kanjo = Kanjo()
+                    kanjo.shiwake = shiwake
+                    kanjo.taishaku = True
+                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kari_kanjo_kamoku_{i}')
+                    kanjo.amount = form.cleaned_data.get(f'kari_amount_{i}')
+                    kanjo.save()
+            
+            # 貸方
+            for i in range(1, KANJO_ROWS + 1):
+                if form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kashi_amount_{i}'):
+                    kanjo = Kanjo()
+                    kanjo.shiwake = shiwake
+                    kanjo.taishaku = False
+                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}')
+                    kanjo.amount = form.cleaned_data.get(f'kashi_amount_{i}')
+                    kanjo.save()
+
         return HttpResponseRedirect(self.success_url)
 
 #class Child2Inline(InlineFormSetFactory):
