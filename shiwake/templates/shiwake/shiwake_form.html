@@ -15,7 +15,7 @@
                         <a class="btn btn-outline-dark" href="{% url 'shiwake_list' %}">戻る</a>
                     </div>
                     <div>
-                        <a class="btn btn-outline-dark save" href="#">保存</a>
+                        <a id="save_button" class="btn btn-outline-dark" href="#">保存</a>
                     </div>
                 </div>
             </div>
@@ -28,4 +28,82 @@
             </div>
         </div>
     </div>
+    <script>
+        const formatter = new Intl.NumberFormat('ja-JP');
+
+        function isNumber(str) {
+           return /^[0-9|０-９]+$/.test(str);
+        }
+
+        function convertToHalfWidth(str) {
+            // 全角文字を半角文字に変換する
+            return str.replace(/[０-９]/g, function(s) {
+                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+            });
+        }
+
+        let amountFields = Array.from(document.querySelectorAll("input[id*=amount]"));
+        const amountFieldValuesHash = Object.fromEntries(amountFields.map(field => [field.id, field.value]));
+        console.log(amountFieldValuesHash)
+
+        amountFields.forEach(field => {
+            // 初期処理
+            if(amountFieldValuesHash[field.id] && !isNaN(amountFieldValuesHash[field.id])) {
+                if(isNumber(amountFieldValuesHash[field.id])) {
+                    field.value = formatter.format(amountFieldValuesHash[field.id]);
+                } else {
+                    field.value = amountFieldValuesHash[field.id];
+                }
+            }
+
+            // フォーカスを外した時の処理
+            field.addEventListener('blur', function(event) {
+                if(event.target.value) {
+                    if(isNumber(event.target.value)) {
+                        amountFieldValuesHash[event.target.id] = convertToHalfWidth(event.target.value);
+                        event.target.value = formatter.format(amountFieldValuesHash[event.target.id]);
+                    } else {
+                        amountFieldValuesHash[event.target.id] = event.target.value;
+                    }
+                }
+            });
+            
+            // フォーカス処理
+            field.addEventListener('focus', function(event) {
+                event.target.value = amountFieldValuesHash[event.target.id]
+            });
+        });
+
+        //保存ボタン処理
+        document.getElementById("save_button").addEventListener("click", function(){
+            // 送信ボタンの２度押しを防止
+            $('#save_button').addClass('disabled');
+            console.log("処理を再開しますaaa");
+
+            // フォーカスを外さないまま送信された値の対策
+            amountFields.forEach(field => {
+                let hashValue = amountFieldValuesHash[field.id];
+
+                let compareValue = hashValue;
+                if(compareValue && !isNaN(compareValue)) {
+                    compareValue = formatter.format(compareValue);
+                }
+                if(field.value !== compareValue) {
+                    if(isNumber(field.value)) {
+                        amountFieldValuesHash[field.id] = convertToHalfWidth(field.value);
+                        field.value = formatter.format(amountFieldValuesHash[field.id]);
+                    } else {
+                        amountFieldValuesHash[field.id] = field.value;
+                    }
+                }
+            })
+            // 値を桁区切り無しに変換
+            Object.keys(amountFieldValuesHash).forEach(key => {
+                document.getElementById(key).value = amountFieldValuesHash[key]
+            });
+            
+            // 送信
+            $('#myform').submit();
+        });
+    </script>
 {% endblock %}
