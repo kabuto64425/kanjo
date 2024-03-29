@@ -24,10 +24,10 @@ class TestForm(forms.Form):
         
         self.helper = FormHelper()
         rows = [Row(
-                Column(f'kari_kanjo_kamoku_{i}', css_class='form-group col-md-3 mb-0'),
-                Column(f'kari_amount_{i}', css_class='form-group col-md-3 mb-0'),
-                Column(f'kashi_kanjo_kamoku_{i}', css_class='form-group col-md-3 mb-0'),
-                Column(f'kashi_amount_{i}', css_class='form-group col-md-3 mb-0'),
+                Column(Field(f'kari_kanjo_kamoku_{i}'), css_class='form-group col-md-3 mb-0'),
+                Column(Field(f'kari_amount_{i}', css_class='text-right'), css_class='form-group col-md-3 mb-0'),
+                Column(Field(f'kashi_kanjo_kamoku_{i}'), css_class='form-group col-md-3 mb-0'),
+                Column(Field(f'kashi_amount_{i}', css_class='text-right'), css_class='form-group col-md-3 mb-0'),
                 css_class='form-row'
             ) for i in range(1, KANJO_ROWS + 1)]
         self.helper.layout = Layout(
@@ -42,7 +42,13 @@ class TestForm(forms.Form):
                 Column(HTML("<div class='text-center'>借方</div>")),
                 Column(HTML("<div class='text-center'>貸方</div>")),
             ),
-            *rows
+            *rows,
+            Row(
+                Column(HTML("<input disabled class='textinput textInput form-control' value='合計'/>")),
+                Column(HTML("<input disabled id='kari_sum' class='text-right textinput textInput form-control'/>")),
+                Column(HTML("<input disabled class='textinput textInput form-control' value='合計'/>")),
+                Column(HTML("<input disabled id='kashi_sum' class='text-right textinput textInput form-control'/>")),
+            ),
         )
     
     def clean(self):

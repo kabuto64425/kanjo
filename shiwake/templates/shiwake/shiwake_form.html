@@ -42,9 +42,60 @@
             });
         }
 
+        function sum_amount(values) {
+            let sum = 0;
+            for (value of values) {
+                if(value) {
+                    if(isNumber(value)) {
+                        sum += parseInt(value);
+                    } else {
+                        sum = Nan;
+                        break;
+                    }
+                }
+            }
+            return sum;
+        }
+
+        // 合計値を更新する
+        function update_sum_field(kari_sum_field, kashi_sum_field, amountFieldValuesHash) {
+            let kari_values = [];
+            let kashi_values = [];
+
+            Object.keys(amountFieldValuesHash).forEach(key => {
+                if(key.startsWith("id_kari")) {
+                    kari_values.push(amountFieldValuesHash[key]);
+                }
+                if(key.startsWith("id_kashi")) {
+                    kashi_values.push(amountFieldValuesHash[key]);
+                }
+            });
+
+            kari_sum = sum_amount(kari_values);
+
+            if(!isNaN(kari_sum)) {
+                kari_sum_field.value = formatter.format(kari_sum);
+            } else {
+                kari_sum_field.value = "";
+            }
+    
+            kashi_sum = sum_amount(kashi_values);
+    
+            if(!isNaN(kashi_sum)) {
+                kashi_sum_field.value = formatter.format(kashi_sum);
+            } else {
+                kashi_sum_field.value = "";
+            }
+        }
+
+        let kari_sum_field = document.getElementById("kari_sum")
+        let kashi_sum_field = document.getElementById("kashi_sum")
+
         let amountFields = Array.from(document.querySelectorAll("input[id*=amount]"));
         const amountFieldValuesHash = Object.fromEntries(amountFields.map(field => [field.id, field.value]));
-        console.log(amountFieldValuesHash)
+        
+        // 画面表示時に合計数を更新する必要がある
+        update_sum_field(kari_sum_field, kashi_sum_field, amountFieldValuesHash);
 
         amountFields.forEach(field => {
             // 初期処理
@@ -66,6 +117,9 @@
                         amountFieldValuesHash[event.target.id] = event.target.value;
                     }
                 }
+
+                // 値が変更されているため、合計値を更新
+                update_sum_field(kari_sum_field, kashi_sum_field, amountFieldValuesHash);
             });
             
             // フォーカス処理
@@ -78,7 +132,6 @@
         document.getElementById("save_button").addEventListener("click", function(){
             // 送信ボタンの２度押しを防止
             $('#save_button').addClass('disabled');
-            console.log("処理を再開しますaaa");
 
             // フォーカスを外さないまま送信された値の対策
             amountFields.forEach(field => {
@@ -96,7 +149,11 @@
                         amountFieldValuesHash[field.id] = field.value;
                     }
                 }
-            })
+            });
+
+            // 値が変更されている可能性があるため、合計値を更新
+            update_sum_field(kari_sum_field, kashi_sum_field, amountFieldValuesHash);
+
             // 値を桁区切り無しに変換
             Object.keys(amountFieldValuesHash).forEach(key => {
                 document.getElementById(key).value = amountFieldValuesHash[key]
