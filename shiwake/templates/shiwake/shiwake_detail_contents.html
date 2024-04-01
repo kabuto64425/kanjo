@@ -1,0 +1,72 @@
+{% load humanize %}{# 数字のコンマ区切り機能 #}
+<div class="row">
+    <div class="col">
+        <ul class="list-group">
+            <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
+                <div class="row">
+                    <div class="col">
+                        {{shiwake_entity.shiwake_date}}
+                    </div>
+                </div>
+                <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                    <div class="col-6 text-center">
+                        借方
+                    </div>
+                    <div class="col-6 text-center">
+                        貸方
+                    </div>
+                </div>
+                <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                    <div class="col-6">
+                        {% for kanjo in shiwake_entity.kari_kanjo_list %}
+                        <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                <div class="col-6">
+                                    {{kanjo.kanjo_kamoku}}
+                                </div>
+                                <div class="col-6 text-right">
+                                    {{kanjo.amount | intcomma }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                    </div>
+                    <div class="col-6">
+                        {% for kanjo in shiwake_entity.kashi_kanjo_list %}
+                            <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                <div class="col-6">
+                                    {{kanjo.kanjo_kamoku}}
+                                </div>
+                                <div class="col-6 text-right">
+                                    {{kanjo.amount | intcomma }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-6">
+                                
+                            </div>
+                            <div class="col-6 text-right">
+                                {{shiwake_entity.kari_amount_sum | intcomma }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-6">
+                                
+                            </div>
+                            <div class="col-6 text-right">
+                                {{shiwake_entity.kashi_amount_sum | intcomma }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

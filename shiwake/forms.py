@@ -11,11 +11,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class TestForm(forms.Form):
+class ShiwakeForm(forms.Form):
     shiwake_date = forms.DateField(label = '仕訳日')
 
     def __init__(self, *args, **kwargs):
-        super(TestForm, self).__init__(*args, **kwargs)
+        super(ShiwakeForm, self).__init__(*args, **kwargs)
         for i in range(1, KANJO_ROWS + 1):
             self.fields[f'kari_kanjo_kamoku_{i}'] = forms.ModelChoiceField(label=f"", queryset=MasterKanjoKamoku.objects, required=False)
             self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"", required=False, widget=forms.TextInput, validators=[validators.MinValueValidator(0)])
@@ -84,70 +84,3 @@ class TestForm(forms.Form):
         else:
             logger.info(False)
         return valid
-
-# 追加
-class ModelFormWithFormSetMixin:
-
-    def __init__(self, *args, **kwargs):
-        super(ModelFormWithFormSetMixin, self).__init__(*args, **kwargs)
-        self.formset = self.formset_class(
-            instance=self.instance,
-            data=self.data if self.is_bound else None,
-        )
-
-    def is_valid(self):
-        return super(ModelFormWithFormSetMixin, self).is_valid() and self.formset.is_valid()
-
-    def save(self, commit=True):
-        saved_instance = super(ModelFormWithFormSetMixin, self).save(commit)
-        1/0
-        self.formset.save(commit)
-        return saved_instance
-
-class KanjoForm(forms.ModelForm):
-    class Meta:
-        model = Kanjo
-        fields = '__all__'
-    
-KanjoFormSet = forms.inlineformset_factory(
-    parent_model=Shiwake,
-    model=Kanjo,
-    form=KanjoForm,
-    extra=3
-)
-
-class ShiwakeForm_temp2(ModelFormWithFormSetMixin, forms.ModelForm):
-
-    formset_class = KanjoFormSet
-
-    class Meta:
-        model = Shiwake
-        fields = '__all__'
-
-class ShiwakeForm_temp(forms.Form):
-    shiwake_date = forms.DateField()
-
-class ShiwakeForm(forms.ModelForm):
-    """
-    モデルフォーム構成クラス
-    ・公式 モデルからフォームを作成する
-    https://docs.djangoproject.com/ja/2.1/topics/forms/modelforms/
-    """
-
-    class Meta:
-        model = Shiwake
-        fields = '__all__'
-
-        # 以下のフィールド以外が入力フォームに表示される
-        # AutoField
-        # auto_now=True
-        # auto_now_add=Ture
-        # editable=False
-    
-    def save(self, commit=True):
-        instance = super(ShiwakeForm, self).save(commit=commit)
-
-        if commit:
-            instance.save()
-
-        return instance

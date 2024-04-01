@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
 
     'rest_framework',
+    'django_filters',
     
     'crispy_forms',
     'users.apps.UsersConfig',

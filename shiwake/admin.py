@@ -5,7 +5,7 @@ from .models import Shiwake, Kanjo
 
 @admin.register(Shiwake)
 class ShiwakeAdmin(admin.ModelAdmin):
-    readonly_fields = ('owner',)
+    readonly_fields = ('owner', 'id')
         
     def save_model(self, request, obj, form, change):
         # update_dateを現在時刻に更新

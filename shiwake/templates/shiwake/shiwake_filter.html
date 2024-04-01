@@ -4,6 +4,35 @@
     {% load static %}
     {% load crispy_forms_tags %}
     <div class="container">
+        <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">検索条件</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="filter" method="get">
+                        <div class="modal-body">
+                            {{ filter.form|crispy }}
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <a class="btn btn-outline-dark" data-dismiss="modal">戻る</a>
+                        <button type="submit" class="btn btn-outline-dark" form="filter">検索</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <a class="btn btn-secondary filtered" style="visibility:hidden" href="/?page=1">検索を解除</a>
+                <div class="float-right mt-1">
+                    <a class="btn btn-outline-dark" data-toggle="modal" data-target="#myModal" href="#">検索</a>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between">
@@ -23,14 +52,11 @@
                         <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
                             {# 必要な項目を追加してください #}
                             <div class="row">
-                                <div class="col-8 col-sm-9">
-                                    {% comment %}
+                                <div class="col">
                                     <div class="d-flex justify-content-end">
-                                        <a class="btn btn-outline-dark " href="{% url 'question_card_list' shiwake.pk %}">問題</a>
-                                        <a class="btn btn-outline-dark " href="{% url 'shiwake_update' shiwake.pk %}">編集</a>
-                                        <a class="btn btn-outline-dark " href="{% url 'shiwake_delete' shiwake.pk %}">削除</a>
+                                        <a class="btn btn-outline-dark " href="{% url 'shiwake_update' shiwake_entity.id %}">編集</a>
+                                        <a class="btn btn-outline-dark " href="{% url 'shiwake_delete' shiwake_entity.id %}">削除</a>
                                     </div>
-                                    {% endcomment  %}
                                 </div>
                             </div>
                             <div class="row">
