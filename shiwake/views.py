@@ -3,15 +3,17 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.edit import FormView, DeleteView
 from django.db import transaction
+from django.db.models import Avg,Sum,Max,Min,Count
 from utils.mixins import CustomLoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 
-from django_filters.views import FilterView
+from django.views.generic import ListView
 from .models import Shiwake, Kanjo
 from .forms import ShiwakeForm
-from .filters import ShiwakeFilterSet
 from config.consts import KANJO_ROWS
-
+from utils import common
+from datetime import datetime, date, time
+from dateutil import relativedelta
 
 import logging
 
@@ -30,10 +32,7 @@ class ShiwakeEntity:
         self.kashi_amount_sum = sum([kanjo.amount for kanjo in self.kashi_kanjo_list])
 
 # Create your views here.
-class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
-
-    model = Shiwake
-    filterset_class = ShiwakeFilterSet
+class ShiwakeListView(CustomLoginRequiredMixin, ListView):
 
     def get(self, request, **kwargs):
         """
@@ -47,7 +46,26 @@ class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
         ソート順・デフォルトの絞り込みを指定
         """
         user = self.request.user  # ログインユーザーモデルの取得
-        return Shiwake.objects.prefetch_related('kanjos').filter(owner = user).order_by('shiwake_date')
+
+        query_last_day = self.request.GET.get('last_day')
+
+        last_day = None
+
+        if query_last_day:
+            last_day = datetime.strptime(query_last_day, '%Y-%m-%d')
+        else:
+            default_date = common.next_last_day(timezone.now().date(), 3, 31)
+            last_day = datetime.combine(default_date, time())
+        
+        first_day = last_day - relativedelta.relativedelta(years=1, days=-1)
+
+        filters = {
+            "owner" : user,
+            "shiwake_date__gte": timezone.make_aware(first_day),
+            "shiwake_date__lte": timezone.make_aware(last_day),
+        }
+
+        return Shiwake.objects.prefetch_related('kanjos').filter(**filters).order_by('shiwake_date')
     
     def get_context_data(self, *, object_list=None, **kwargs):
         """
@@ -56,6 +74,31 @@ class ShiwakeListView(CustomLoginRequiredMixin, FilterView):
         # 表示データを追加したい場合は、ここでキーを追加しテンプレート上で表示する
         # 例：kwargs['sample'] = 'sample'
         context = super().get_context_data(object_list=object_list, **kwargs)
+
+        user = self.request.user  # ログインユーザーモデルの取得
+
+        aggreate_shiwake_date__max = Shiwake.objects.all().filter(owner=user).aggregate(Max("shiwake_date"))
+        aggreate_shiwake_date__min = Shiwake.objects.all().filter(owner=user).aggregate(Min("shiwake_date"))
+        
+        shiwake_date__max = aggreate_shiwake_date__max["shiwake_date__max"]
+        shiwake_date__min = aggreate_shiwake_date__min["shiwake_date__min"]
+
+        last_days = [
+            common.next_last_day(shiwake_date__max, 3, 31),
+            common.next_last_day(shiwake_date__min, 3, 31),
+            common.next_last_day(timezone.now().date(), 3, 31)
+        ]
+
+        last_day_of_earliest = min(last_days)
+        last_day_of_latest = max(last_days)
+
+        select_options = []
+
+        for current_year in range(last_day_of_earliest.year, last_day_of_latest.year + 1):
+            select_options.append(date(year = current_year, month = 3, day = 31))
+
+        logger.info(select_options)
+        context['select_option_list'] = select_options
 
         context['shiwake_entity_list'] = [ShiwakeEntity(shiwake) for shiwake in context['shiwake_list']]
         return context

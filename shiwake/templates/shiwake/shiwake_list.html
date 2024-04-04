@@ -25,6 +25,14 @@
                 </div>
             </div>
         </div>
+        <form method="get">
+            <select name="last_day">
+                {% for select_option in select_option_list %}
+                    <option value="{{select_option|date:'Y-m-j'}}">{{select_option}}</option>
+                {% endfor %}
+            </select>
+            <button>検索</button>
+          </form>
         <div class="row">
             <div class="col-12">
                 <a class="btn btn-secondary filtered" style="visibility:hidden" href="/?page=1">検索を解除</a>
