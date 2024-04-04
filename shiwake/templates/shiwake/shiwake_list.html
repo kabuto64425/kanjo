@@ -4,43 +4,6 @@
     {% load static %}
     {% load crispy_forms_tags %}
     <div class="container">
-        <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">検索条件</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="filter" method="get">
-                        <div class="modal-body">
-                            {{ filter.form|crispy }}
-                        </div>
-                    </form>
-                    <div class="modal-footer">
-                        <a class="btn btn-outline-dark" data-dismiss="modal">戻る</a>
-                        <button type="submit" class="btn btn-outline-dark" form="filter">検索</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <form method="get">
-            <select name="last_day">
-                {% for select_option in select_option_list %}
-                    <option value="{{select_option|date:'Y-m-j'}}">{{select_option}}</option>
-                {% endfor %}
-            </select>
-            <button>検索</button>
-          </form>
-        <div class="row">
-            <div class="col-12">
-                <a class="btn btn-secondary filtered" style="visibility:hidden" href="/?page=1">検索を解除</a>
-                <div class="float-right mt-1">
-                    <a class="btn btn-outline-dark" data-toggle="modal" data-target="#myModal" href="#">検索</a>
-                </div>
-            </div>
-        </div>
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between">
@@ -51,6 +14,17 @@
                         <a class="btn btn-outline-dark" href="{% url 'shiwake_create' %}">新規</a>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <form method="get" id="search_form">
+                    <select name="last_day" id="selector" class="select custom-select">
+                        {% for select_option in select_option_list %}
+                            <option value="{{select_option|date:'Y-m-j'}}" {% if select_option == selected %}selected{% endif %}>{{select_option}}</option>
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
         </div>
         <div class="row">
@@ -140,4 +114,10 @@
             </div>
         </div>
     </div>
+    <script>
+        search_form = document.getElementById("search_form");
+        document.getElementById("selector").addEventListener("change", function(){
+            search_form.submit();
+        });
+    </script>
 {% endblock %}

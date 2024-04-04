@@ -49,20 +49,22 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
 
         query_last_day = self.request.GET.get('last_day')
 
-        last_day = None
+        last_datetime = None
 
         if query_last_day:
-            last_day = datetime.strptime(query_last_day, '%Y-%m-%d')
+            formated = datetime.strptime(query_last_day, '%Y-%m-%d')
+            last_date = common.next_last_day(formated.date(), 3, 31)
         else:
-            default_date = common.next_last_day(timezone.now().date(), 3, 31)
-            last_day = datetime.combine(default_date, time())
+            last_date = common.next_last_day(timezone.now().date(), 3, 31)
+
+        last_datetime = datetime.combine(last_date, time())
         
-        first_day = last_day - relativedelta.relativedelta(years=1, days=-1)
+        first_datetime = last_datetime - relativedelta.relativedelta(years=1, days=-1)
 
         filters = {
             "owner" : user,
-            "shiwake_date__gte": timezone.make_aware(first_day),
-            "shiwake_date__lte": timezone.make_aware(last_day),
+            "shiwake_date__gte": timezone.make_aware(first_datetime),
+            "shiwake_date__lte": timezone.make_aware(last_datetime),
         }
 
         return Shiwake.objects.prefetch_related('kanjos').filter(**filters).order_by('shiwake_date')
@@ -91,6 +93,18 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
 
         last_day_of_earliest = min(last_days)
         last_day_of_latest = max(last_days)
+
+        query_last_day = self.request.GET.get('last_day')
+
+        last_date = None
+
+        if query_last_day:
+            formated = datetime.strptime(query_last_day, '%Y-%m-%d')
+            last_date = common.next_last_day(formated.date(), 3, 31)
+        else:
+            last_date = common.next_last_day(timezone.now().date(), 3, 31)
+
+        context['selected'] = last_date
 
         select_options = []
 
