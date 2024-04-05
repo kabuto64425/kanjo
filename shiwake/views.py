@@ -41,30 +41,30 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         """
         return super().get(request, **kwargs)
     
+    def find_period_from_queryparam(self):
+        query_last_day = self.request.GET.get('last_day')
+
+        if query_last_day:
+            target = timezone.make_aware(datetime.strptime(query_last_day, '%Y-%m-%d'))
+            return common.find_peripd(target, 3, 31)
+        else:
+            return common.find_peripd(timezone.now(), 3, 31)
+
     def get_queryset(self):
         """
         ソート順・デフォルトの絞り込みを指定
         """
         user = self.request.user  # ログインユーザーモデルの取得
 
-        query_last_day = self.request.GET.get('last_day')
+        period = self.find_period_from_queryparam()
 
-        last_datetime = None
-
-        if query_last_day:
-            formated = datetime.strptime(query_last_day, '%Y-%m-%d')
-            last_date = common.next_last_day(formated.date(), 3, 31)
-        else:
-            last_date = common.next_last_day(timezone.now().date(), 3, 31)
-
-        last_datetime = datetime.combine(last_date, time())
-        
-        first_datetime = last_datetime - relativedelta.relativedelta(years=1, days=-1)
+        first_datetime = period[0]
+        last_datetime = period[1]
 
         filters = {
             "owner" : user,
-            "shiwake_date__gte": timezone.make_aware(first_datetime),
-            "shiwake_date__lte": timezone.make_aware(last_datetime),
+            "shiwake_date__gte": first_datetime,
+            "shiwake_date__lte": last_datetime,
         }
 
         return Shiwake.objects.prefetch_related('kanjos').filter(**filters).order_by('shiwake_date')
@@ -77,6 +77,10 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         # 例：kwargs['sample'] = 'sample'
         context = super().get_context_data(object_list=object_list, **kwargs)
 
+        period_from_queryparam = self.find_period_from_queryparam()
+
+        context['selected'] = period_from_queryparam[1]
+
         user = self.request.user  # ログインユーザーモデルの取得
 
         aggreate_shiwake_date__max = Shiwake.objects.all().filter(owner=user).aggregate(Max("shiwake_date"))
@@ -85,33 +89,18 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         shiwake_date__max = aggreate_shiwake_date__max["shiwake_date__max"]
         shiwake_date__min = aggreate_shiwake_date__min["shiwake_date__min"]
 
-        last_days = [
-            common.next_last_day(shiwake_date__max, 3, 31),
-            common.next_last_day(shiwake_date__min, 3, 31),
-            common.next_last_day(timezone.now().date(), 3, 31)
-        ]
+        candidate_dates = [timezone.make_aware(datetime.combine(date, time())) for date in [shiwake_date__max, shiwake_date__min, timezone.now().date()]]
 
-        last_day_of_earliest = min(last_days)
-        last_day_of_latest = max(last_days)
+        periods = [common.find_peripd(candidate_date, 3, 31) for candidate_date in candidate_dates]
 
-        query_last_day = self.request.GET.get('last_day')
-
-        last_date = None
-
-        if query_last_day:
-            formated = datetime.strptime(query_last_day, '%Y-%m-%d')
-            last_date = common.next_last_day(formated.date(), 3, 31)
-        else:
-            last_date = common.next_last_day(timezone.now().date(), 3, 31)
-
-        context['selected'] = last_date
+        last_day_of_earliest = min(periods)[1]
+        last_day_of_latest = max(periods)[1]
 
         select_options = []
 
         for current_year in range(last_day_of_earliest.year, last_day_of_latest.year + 1):
-            select_options.append(date(year = current_year, month = 3, day = 31))
+            select_options.append(timezone.make_aware(datetime(year = current_year, month = 3, day = 31)))
 
-        logger.info(select_options)
         context['select_option_list'] = select_options
 
         context['shiwake_entity_list'] = [ShiwakeEntity(shiwake) for shiwake in context['shiwake_list']]

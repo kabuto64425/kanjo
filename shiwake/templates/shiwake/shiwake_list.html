@@ -21,7 +21,7 @@
                 <form method="get" id="search_form">
                     <select name="last_day" id="selector" class="select custom-select">
                         {% for select_option in select_option_list %}
-                            <option value="{{select_option|date:'Y-m-j'}}" {% if select_option == selected %}selected{% endif %}>{{select_option}}</option>
+                            <option value="{{select_option|date:'Y-m-j'}}" {% if select_option == selected %}selected{% endif %}>{{select_option|date:'Y-m-j'}}</option>
                         {% endfor %}
                     </select>
                 </form>
