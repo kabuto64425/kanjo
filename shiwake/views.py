@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.edit import FormView, DeleteView
 from django.db import transaction
-from django.db.models import Avg,Sum,Max,Min,Count
+from django.db.models import Max,Min
 from utils.mixins import CustomLoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 
@@ -12,8 +12,7 @@ from .models import Shiwake, Kanjo
 from .forms import ShiwakeForm
 from config.consts import KANJO_ROWS
 from utils import common
-from datetime import datetime, date, time
-from dateutil import relativedelta
+from datetime import datetime, time
 
 import logging
 
