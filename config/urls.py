@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),
     path('shiwake/', include('shiwake.urls')),
+    path('users/', include('users.urls')),
     path('', include('allauth.urls')),
 ]
 

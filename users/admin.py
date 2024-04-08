@@ -8,7 +8,7 @@ from .models import User
 @admin.register(User)
 class AdminUserAdmin(UserAdmin):
     fieldsets = (
-        (None, {"fields": ("username", "password", "nick_name", "uuid_for_google_form")}),
+        (None, {"fields": ("username", "password", "nick_name", "uuid_for_google_form", "last_month", "last_day")}),
         (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
         (
             _("Permissions"),

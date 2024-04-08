@@ -76,11 +76,3 @@ class ShiwakeForm(forms.Form):
         if kari_amout_sum != kashi_amout_sum:
             self.add_error(None, '借方の合計と貸方の合計を一致させてください')
         return cleaned_data
-    
-    def is_valid(self):
-        valid = super().is_valid()
-        if self.cleaned_data.get(f'kari_kanjo_kamoku_{1}'):
-            logger.info(True)
-        else:
-            logger.info(False)
-        return valid

@@ -46,10 +46,10 @@
             let sum = 0;
             for (value of values) {
                 if(value) {
-                    if(isNumber(value)) {
+                    if(isNumber(value) && isNumber(value) >= 0) {
                         sum += parseInt(value);
                     } else {
-                        sum = Nan;
+                        sum = NaN;
                         break;
                     }
                 }

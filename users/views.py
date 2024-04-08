@@ -1,23 +1,25 @@
+from django.http import HttpResponseRedirect
 from django.views.generic import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from utils.mixins import CustomLoginRequiredMixin
 from .forms import UserUpdateForm
 
-class UserChangeView(LoginRequiredMixin, FormView):
+class UserChangeView(CustomLoginRequiredMixin, FormView):
     template_name = 'users/update.html'
     form_class = UserUpdateForm
 
     success_url = '/'
 
+    def get_object(self, queryset=None):
+        return self.request.user
+    
+    def get_initial(self):
+        user = self.get_object()
+        return {"last_month" : user.last_month, "last_day" : user.last_day}
+
     def form_valid(self, form):
         #formのupdateメソッドにログインユーザーを渡して更新
-        form.update(user=self.request.user)
-        return super().form_valid(form)
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # 更新前のユーザー情報をkwargsとして渡す
-        kwargs.update({
-            'nick_name' : self.request.user.nick_name,
-        })
-        print(kwargs)
-        return kwargs
+        user = self.get_object()
+        user.last_month = form.cleaned_data.get('last_month')
+        user.last_day = form.cleaned_data.get('last_day')
+        user.save()
+        return HttpResponseRedirect(self.success_url)

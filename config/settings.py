@@ -57,10 +57,6 @@ INSTALLED_APPS = [
     'crispy_forms',
     'users.apps.UsersConfig',
     'app.apps.AppConfig',
-    'myapp.apps.MyappConfig',
-    'deck.apps.DeckConfig',
-    'questioncard.apps.QuestioncardConfig',
-    'askquestion.apps.AskquestionConfig',
     'shiwake.apps.ShiwakeConfig',
 
     'utils'
