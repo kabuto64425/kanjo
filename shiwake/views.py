@@ -99,7 +99,7 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         select_options = []
 
         for current_year in range(last_day_of_earliest.year, last_day_of_latest.year + 1):
-            select_options.append(timezone.make_aware(datetime(year = current_year, month = 3, day = 31)))
+            select_options.append(common.find_period_from_year(current_year, 3, 31))
 
         context['select_option_list'] = select_options
 

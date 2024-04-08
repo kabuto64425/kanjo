@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime
+from datetime import time
 from dateutil import relativedelta
 from django.utils import timezone
 
@@ -26,7 +27,6 @@ def next_last_day(target_date, last_month, last_day):
 # タプル形式
 # index 0: 期首
 # index 1: 期末
-# 該当する期間を見つける
 def find_peripd(target_date, last_month, last_day):
     current_year = target_date.year
 
@@ -72,3 +72,14 @@ def find_peripd(target_date, last_month, last_day):
         # 期首:比較日の1年前の次の日
         period_first_date = period_last_date - relativedelta.relativedelta(years=1, days=-1)
         return (period_first_date, period_last_date)
+
+# 該当する期間を見つける(「見つけたい期間の末日の年」を引数に指定する形式)
+# タプル形式
+# index 0: 期首
+# index 1: 期末
+def find_period_from_year(target_year, last_month, last_day):
+    if (last_month, last_day) == (2, 29):
+        find_date = datetime(target_year, last_month + 1, 1) - relativedelta.relativedelta(days=1)
+        return find_peripd(timezone.make_aware(find_date, time()))
+    else:
+        return find_peripd(timezone.make_aware(datetime.combine(datetime(target_year, last_month, last_day), time())), last_month, last_day)
