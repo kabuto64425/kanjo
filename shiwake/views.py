@@ -157,7 +157,7 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
     success_url = reverse_lazy('shiwake_list')
 
     def get_object(self, queryset=None):
-        shiwake = Shiwake.objects.prefetch_related('kanjos').get(pk=self.kwargs['pk'])
+        shiwake = Shiwake.objects.prefetch_related('shiwake_kanjos').get(pk=self.kwargs['pk'])
          # 自身の仕訳に対してほかユーザーがアクセスするのを防ぐため
         if self.request.user == shiwake.owner:
             return shiwake
@@ -168,7 +168,7 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
         shiwake = self.get_object()
         res = {'shiwake_date': shiwake.shiwake_date}
 
-        kanjo_list = shiwake.kanjos.all()
+        kanjo_list = shiwake.shiwake_kanjos.all()
         kari_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == True]
         for i, kari_kanjo in enumerate(kari_kanjo_list, 1):
             res[f'kari_kanjo_kamoku_{i}'] = kari_kanjo.kanjo_kamoku
@@ -189,7 +189,7 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
             shiwake.shiwake_date = form.cleaned_data.get('shiwake_date')
             shiwake.save()
 
-            shiwake.kanjos.all().delete()
+            shiwake.shiwake_kanjos.all().delete()
 
             # 借方
             for i in range(1, KANJO_ROWS + 1):
