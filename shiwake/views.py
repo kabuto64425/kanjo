@@ -89,9 +89,14 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         shiwake_date__max = aggreate_shiwake_date__max["shiwake_date__max"]
         shiwake_date__min = aggreate_shiwake_date__min["shiwake_date__min"]
 
-        candidate_dates = [timezone.make_aware(datetime.combine(date, time())) for date in [shiwake_date__max, shiwake_date__min, timezone.now().date()]]
+        candidate_dates = []
+        for date in [shiwake_date__max, shiwake_date__min, timezone.now().date()]:
+            if date:
+                candidate_dates.append(date)
 
-        periods = [common.find_peripd(candidate_date, user.last_month, user.last_day) for candidate_date in candidate_dates]
+        candidate_datetimes = [timezone.make_aware(datetime.combine(date, time())) for date in candidate_dates]
+
+        periods = [common.find_peripd(candidate_datetime, user.last_month, user.last_day) for candidate_datetime in candidate_datetimes]
 
         last_day_of_earliest = min(periods)[1]
         last_day_of_latest = max(periods)[1]
