@@ -1,4 +1,28 @@
 {% extends "_base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <ul class="list-group">
+                <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
+                    <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                        <div class="col-6 text-center">
+                            借方
+                        </div>
+                        <div class="col-6 text-center">
+                            貸方
+                        </div>
+                    </div>
+                    <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                        <div class="col-6">
+                        </div>
+                        <div class="col-6">
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}

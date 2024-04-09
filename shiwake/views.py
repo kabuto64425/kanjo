@@ -23,7 +23,7 @@ class ShiwakeEntity:
         self.id = shiwake.id
         self.shiwake_date = shiwake.shiwake_date
 
-        kanjo_list = shiwake.kanjos.all()
+        kanjo_list = shiwake.shiwake_kanjos.all()
         self.kari_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == True]
         self.kashi_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == False]
 
@@ -67,7 +67,7 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
             "shiwake_date__lte": last_datetime,
         }
 
-        return Shiwake.objects.prefetch_related('kanjos').filter(**filters).order_by('shiwake_date')
+        return Shiwake.objects.prefetch_related('shiwake_kanjos').filter(**filters).order_by('shiwake_date')
     
     def get_context_data(self, *, object_list=None, **kwargs):
         """

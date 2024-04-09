@@ -27,7 +27,7 @@ class Shiwake(models.Model):
         verbose_name='所有者',
         blank=False,
         null=False,
-        related_name='shiwake_owner',
+        related_name='user_shiwakes',
         on_delete=models.CASCADE,
         editable=False,
     )
@@ -69,7 +69,7 @@ class Kanjo(models.Model):
         verbose_name='勘定科目',
         blank=False,
         null=False,
-        related_name='master_kanjo_kamokus',
+        related_name='master_kanjo_kamoku_kanjos',
         on_delete=models.PROTECT,
     )
 
@@ -84,7 +84,7 @@ class Kanjo(models.Model):
         verbose_name='仕訳',
         blank=False,
         null=False,
-        related_name='kanjos',
+        related_name='shiwake_kanjos',
         on_delete=models.CASCADE,
     )
 
