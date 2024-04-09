@@ -23,6 +23,7 @@ urlpatterns = [
     path('shiwake/', include('shiwake.urls')),
     path('users/', include('users.urls')),
     path('', include('allauth.urls')),
+    path('zaimu/', include('zaimu.urls')),
 ]
 
 # 管理サイトの見出しを変更可能

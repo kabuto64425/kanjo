@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'app.apps.AppConfig',
     'shiwake.apps.ShiwakeConfig',
-
+    'zaimu.apps.ZaimuConfig',
     'utils'
 ]
 

@@ -6,7 +6,10 @@
             <div class="col-12">
                 <div class="float-right mt-1">
                     {% if user.is_authenticated %}
-                        <a class="btn btn-outline-dark" href="{% url 'shiwake_list' %}">仕訳一覧</a>
+                        <div class="list-group">
+                            <a class="btn btn-outline-dark" href="{% url 'shiwake_list' %}">仕訳一覧</a>
+                            <a class="btn btn-outline-dark" href="{% url 'taishaku_soneki' %}">貸借対照表・損益計算書</a>
+                        </div>
                     {% else %}
                         <a class="btn btn-outline-dark" href="{% provider_login_url 'google' %}">ログイン</a>
                     {% endif %}
