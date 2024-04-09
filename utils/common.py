@@ -80,6 +80,6 @@ def find_peripd(target_date, last_month, last_day):
 def find_period_from_year(target_year, last_month, last_day):
     if (last_month, last_day) == (2, 29):
         find_date = datetime(target_year, last_month + 1, 1) - relativedelta.relativedelta(days=1)
-        return find_peripd(timezone.make_aware(find_date, time()))
+        return find_peripd(timezone.make_aware(datetime.combine(find_date, time())), last_month, last_day)
     else:
         return find_peripd(timezone.make_aware(datetime.combine(datetime(target_year, last_month, last_day), time())), last_month, last_day)

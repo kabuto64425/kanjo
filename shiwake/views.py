@@ -41,13 +41,14 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         return super().get(request, **kwargs)
     
     def find_period_from_queryparam(self):
+        user = self.request.user  # ログインユーザーモデルの取得
         query_last_day = self.request.GET.get('last_day')
 
         if query_last_day:
             target = timezone.make_aware(datetime.strptime(query_last_day, '%Y-%m-%d'))
-            return common.find_peripd(target, 3, 31)
+            return common.find_peripd(target, user.last_month, user.last_day)
         else:
-            return common.find_peripd(timezone.now(), 3, 31)
+            return common.find_peripd(timezone.now(), user.last_month, user.last_day)
 
     def get_queryset(self):
         """
@@ -90,7 +91,7 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
 
         candidate_dates = [timezone.make_aware(datetime.combine(date, time())) for date in [shiwake_date__max, shiwake_date__min, timezone.now().date()]]
 
-        periods = [common.find_peripd(candidate_date, 3, 31) for candidate_date in candidate_dates]
+        periods = [common.find_peripd(candidate_date, user.last_month, user.last_day) for candidate_date in candidate_dates]
 
         last_day_of_earliest = min(periods)[1]
         last_day_of_latest = max(periods)[1]
@@ -98,7 +99,7 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         select_options = []
 
         for current_year in range(last_day_of_earliest.year, last_day_of_latest.year + 1):
-            select_options.append(common.find_period_from_year(current_year, 3, 31))
+            select_options.append(common.find_period_from_year(current_year, user.last_month, user.last_day))
 
         context['select_option_list'] = select_options
 

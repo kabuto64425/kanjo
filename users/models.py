@@ -22,8 +22,6 @@ class User(AbstractUser):
         default=3,
         blank=False,
         null=False,
-        validators=[validators.MinValueValidator(1),
-                    validators.MaxValueValidator(12)]
     )
 
     last_day = models.IntegerField(
@@ -31,8 +29,6 @@ class User(AbstractUser):
         default=31,
         blank=False,
         null=False,
-        validators=[validators.MinValueValidator(1),
-                    validators.MaxValueValidator(31)]
     )
 
     uuid_for_google_form = models.CharField(
