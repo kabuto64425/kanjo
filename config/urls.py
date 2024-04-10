@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+import debug_toolbar
+from django.conf import settings
 
 # ルーティング設定
 urlpatterns = [
@@ -25,6 +27,10 @@ urlpatterns = [
     path('', include('allauth.urls')),
     path('zaimu/', include('zaimu.urls')),
 ]
+
+# 追加  '__debug__/'は他のURLに影響を及ぼさないならなんでも良い
+if settings.DEBUG:
+    urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
 
 # 管理サイトの見出しを変更可能
 #  タイトル；タイトルタグで使用
