@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Max,Min
 from utils.mixins import CustomLoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Prefetch
 
 from django.views.generic import ListView
 from .models import Shiwake, Kanjo
@@ -67,7 +68,7 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
             "shiwake_date__lte": last_datetime,
         }
 
-        return Shiwake.objects.prefetch_related('shiwake_kanjos').filter(**filters).order_by('shiwake_date')
+        return Shiwake.objects.prefetch_related(Prefetch('shiwake_kanjos',queryset=Kanjo.objects.select_related('kanjo_kamoku'))).filter(**filters).order_by('shiwake_date')
     
     def get_context_data(self, *, object_list=None, **kwargs):
         """
