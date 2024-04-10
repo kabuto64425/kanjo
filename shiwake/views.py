@@ -11,6 +11,7 @@ from django.db.models import Prefetch
 from django.views.generic import ListView
 from .models import Shiwake, Kanjo
 from .forms import ShiwakeForm
+from app.models import MasterKanjoKamoku
 from config.consts import KANJO_ROWS
 from utils import common
 from datetime import datetime, time
@@ -127,25 +128,29 @@ class ShiwakeCreateView(CustomLoginRequiredMixin, FormView):
             shiwake.shiwake_date = form.cleaned_data.get('shiwake_date')
             shiwake.save()
 
+            kanjos = []
+
             # 借方
             for i in range(1, KANJO_ROWS + 1):
                 if form.cleaned_data.get(f'kari_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kari_amount_{i}'):
                     kanjo = Kanjo()
                     kanjo.shiwake = shiwake
                     kanjo.taishaku = True
-                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kari_kanjo_kamoku_{i}')
+                    kanjo.kanjo_kamoku = MasterKanjoKamoku.objects.get(id=form.cleaned_data.get(f'kari_kanjo_kamoku_{i}'))
                     kanjo.amount = form.cleaned_data.get(f'kari_amount_{i}')
-                    kanjo.save()
-            
+                    kanjos.append(kanjo)
+
             # 貸方
             for i in range(1, KANJO_ROWS + 1):
                 if form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kashi_amount_{i}'):
                     kanjo = Kanjo()
                     kanjo.shiwake = shiwake
                     kanjo.taishaku = False
-                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}')
+                    kanjo.kanjo_kamoku = MasterKanjoKamoku.objects.get(id=form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}'))
                     kanjo.amount = form.cleaned_data.get(f'kashi_amount_{i}')
-                    kanjo.save()
+                    kanjos.append(kanjo)
+
+            Kanjo.objects.bulk_create(kanjos)
 
         return HttpResponseRedirect(self.success_url)
     
@@ -158,7 +163,7 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
     success_url = reverse_lazy('shiwake_list')
 
     def get_object(self, queryset=None):
-        shiwake = Shiwake.objects.prefetch_related('shiwake_kanjos').get(pk=self.kwargs['pk'])
+        shiwake = Shiwake.objects.prefetch_related(Prefetch('shiwake_kanjos',queryset=Kanjo.objects.select_related('kanjo_kamoku'))).get(pk=self.kwargs['pk'])
          # 自身の仕訳に対してほかユーザーがアクセスするのを防ぐため
         if self.request.user == shiwake.owner:
             return shiwake
@@ -172,12 +177,12 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
         kanjo_list = shiwake.shiwake_kanjos.all()
         kari_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == True]
         for i, kari_kanjo in enumerate(kari_kanjo_list, 1):
-            res[f'kari_kanjo_kamoku_{i}'] = kari_kanjo.kanjo_kamoku
+            res[f'kari_kanjo_kamoku_{i}'] = kari_kanjo.kanjo_kamoku.id
             res[f'kari_amount_{i}'] = kari_kanjo.amount
 
         kashi_kanjo_list = [kanjo for kanjo in kanjo_list if kanjo.taishaku == False]
         for i, kashi_kanjo in enumerate(kashi_kanjo_list, 1):
-            res[f'kashi_kanjo_kamoku_{i}'] = kashi_kanjo.kanjo_kamoku
+            res[f'kashi_kanjo_kamoku_{i}'] = kashi_kanjo.kanjo_kamoku.id
             res[f'kashi_amount_{i}'] = kashi_kanjo.amount
 
         return res
@@ -192,25 +197,29 @@ class ShiwakeUpdateView(CustomLoginRequiredMixin, FormView):
 
             shiwake.shiwake_kanjos.all().delete()
 
+            kanjos = []
+
             # 借方
             for i in range(1, KANJO_ROWS + 1):
                 if form.cleaned_data.get(f'kari_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kari_amount_{i}'):
                     kanjo = Kanjo()
                     kanjo.shiwake = shiwake
                     kanjo.taishaku = True
-                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kari_kanjo_kamoku_{i}')
+                    kanjo.kanjo_kamoku = MasterKanjoKamoku.objects.get(id=form.cleaned_data.get(f'kari_kanjo_kamoku_{i}'))
                     kanjo.amount = form.cleaned_data.get(f'kari_amount_{i}')
-                    kanjo.save()
-            
+                    kanjos.append(kanjo)
+
             # 貸方
             for i in range(1, KANJO_ROWS + 1):
                 if form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}') and form.cleaned_data.get(f'kashi_amount_{i}'):
                     kanjo = Kanjo()
                     kanjo.shiwake = shiwake
                     kanjo.taishaku = False
-                    kanjo.kanjo_kamoku = form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}')
+                    kanjo.kanjo_kamoku = MasterKanjoKamoku.objects.get(id=form.cleaned_data.get(f'kashi_kanjo_kamoku_{i}'))
                     kanjo.amount = form.cleaned_data.get(f'kashi_amount_{i}')
-                    kanjo.save()
+                    kanjos.append(kanjo)
+
+            Kanjo.objects.bulk_create(kanjos)
 
         return HttpResponseRedirect(self.success_url)
 

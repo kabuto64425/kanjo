@@ -16,10 +16,13 @@ class ShiwakeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ShiwakeForm, self).__init__(*args, **kwargs)
+        master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
+        kanjo_kamoku_choices = [(None, "---------")]
+        kanjo_kamoku_choices += [(master_kanjo_kamoku.id, master_kanjo_kamoku) for master_kanjo_kamoku in master_kanjo_kamokus]
         for i in range(1, KANJO_ROWS + 1):
-            self.fields[f'kari_kanjo_kamoku_{i}'] = forms.ModelChoiceField(label=f"", queryset=MasterKanjoKamoku.objects, required=False)
+            self.fields[f'kari_kanjo_kamoku_{i}'] = forms.ChoiceField(label=f"", choices=kanjo_kamoku_choices, required=False)
             self.fields[f'kari_amount_{i}'] = forms.IntegerField(label=f"", required=False, widget=forms.TextInput, validators=[validators.MinValueValidator(0)])
-            self.fields[f'kashi_kanjo_kamoku_{i}'] = forms.ModelChoiceField(label=f"", queryset=MasterKanjoKamoku.objects, required=False)
+            self.fields[f'kashi_kanjo_kamoku_{i}'] = forms.ChoiceField(label=f"", choices=kanjo_kamoku_choices, required=False)
             self.fields[f'kashi_amount_{i}'] = forms.IntegerField(label=f"", required=False, widget=forms.TextInput, validators=[validators.MinValueValidator(0)])
         
         self.helper = FormHelper()
