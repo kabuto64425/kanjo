@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.views.generic.edit import FormView, DeleteView
 from django.db import transaction
 from django.db.models import Max,Min
-from utils.mixins import CustomLoginRequiredMixin
+from utils.mixins import CustomLoginRequiredMixin, AccountingPeriodLoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Prefetch
 
@@ -13,8 +13,6 @@ from .models import Shiwake, Kanjo
 from .forms import ShiwakeForm
 from app.models import MasterKanjoKamoku
 from config.consts import KANJO_ROWS
-from utils import common
-from datetime import datetime, time
 
 import logging
 
@@ -33,7 +31,7 @@ class ShiwakeEntity:
         self.kashi_amount_sum = sum([kanjo.amount for kanjo in self.kashi_kanjo_list])
 
 # Create your views here.
-class ShiwakeListView(CustomLoginRequiredMixin, ListView):
+class ShiwakeListView(AccountingPeriodLoginRequiredMixin, ListView):
 
     def get(self, request, **kwargs):
         """
@@ -41,16 +39,6 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         セッション変数の管理:一覧画面と詳細画面間の移動時に検索条件が維持されるようにする。
         """
         return super().get(request, **kwargs)
-    
-    def find_period_from_queryparam(self):
-        user = self.request.user  # ログインユーザーモデルの取得
-        query_last_day = self.request.GET.get('last_day')
-
-        if query_last_day:
-            target = timezone.make_aware(datetime.strptime(query_last_day, '%Y-%m-%d'))
-            return common.find_peripd(target, user.last_month, user.last_day)
-        else:
-            return common.find_peripd(timezone.now(), user.last_month, user.last_day)
 
     def get_queryset(self):
         """
@@ -58,57 +46,24 @@ class ShiwakeListView(CustomLoginRequiredMixin, ListView):
         """
         user = self.request.user  # ログインユーザーモデルの取得
 
-        period = self.find_period_from_queryparam()
-
-        first_datetime = period[0]
-        last_datetime = period[1]
+        period = self.find_period_from_queryparam("last_day")
 
         filters = {
             "owner" : user,
-            "shiwake_date__gte": first_datetime,
-            "shiwake_date__lte": last_datetime,
+            "shiwake_date__gte": period[0],
+            "shiwake_date__lte": period[1],
         }
 
         return Shiwake.objects.prefetch_related(Prefetch('shiwake_kanjos',queryset=Kanjo.objects.select_related('kanjo_kamoku'))).filter(**filters).order_by('shiwake_date')
     
     def get_context_data(self, *, object_list=None, **kwargs):
-        """
-        表示データの設定
-        """
-        # 表示データを追加したい場合は、ここでキーを追加しテンプレート上で表示する
-        # 例：kwargs['sample'] = 'sample'
         context = super().get_context_data(object_list=object_list, **kwargs)
 
-        period_from_queryparam = self.find_period_from_queryparam()
+        period_from_queryparam = self.find_period_from_queryparam("last_day")
 
         context['selected'] = period_from_queryparam[1]
 
-        user = self.request.user  # ログインユーザーモデルの取得
-
-        aggreate_shiwake_date__max = Shiwake.objects.all().filter(owner=user).aggregate(Max("shiwake_date"))
-        aggreate_shiwake_date__min = Shiwake.objects.all().filter(owner=user).aggregate(Min("shiwake_date"))
-        
-        shiwake_date__max = aggreate_shiwake_date__max["shiwake_date__max"]
-        shiwake_date__min = aggreate_shiwake_date__min["shiwake_date__min"]
-
-        candidate_dates = []
-        for date in [shiwake_date__max, shiwake_date__min, timezone.now().date()]:
-            if date:
-                candidate_dates.append(date)
-
-        candidate_datetimes = [timezone.make_aware(datetime.combine(date, time())) for date in candidate_dates]
-
-        periods = [common.find_peripd(candidate_datetime, user.last_month, user.last_day) for candidate_datetime in candidate_datetimes]
-
-        last_day_of_earliest = min(periods)[1]
-        last_day_of_latest = max(periods)[1]
-
-        select_options = []
-
-        for current_year in range(last_day_of_earliest.year, last_day_of_latest.year + 1):
-            select_options.append(common.find_period_from_year(current_year, user.last_month, user.last_day))
-
-        context['select_option_list'] = select_options
+        context['select_option_list'] = self.create_period_selector_choices()
 
         context['shiwake_entity_list'] = [ShiwakeEntity(shiwake) for shiwake in context['shiwake_list']]
         return context

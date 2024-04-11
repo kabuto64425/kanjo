@@ -2,15 +2,14 @@ from django.db import models
 
 from users.models import User
 
-class MasterKanjoKamoku(models.Model):
-    TYPE = (
-            (1, '資産'),
-            (2, '負債'),
-            (3, '純資産'),
-            (4, '費用'),
-            (5, '収益'),
-    )
+class MasterKanjoKamokuType(models.IntegerChoices):
+    SHISAN = 1, '資産'
+    HUSAI = 2, '負債'
+    JUNSHISAN = 3, '純資産'
+    HIYO = 4, '費用'
+    SHUEKI = 5, '収益'
 
+class MasterKanjoKamoku(models.Model):
     name = models.CharField(
         verbose_name='勘定科目名',
         max_length=50,
@@ -21,7 +20,7 @@ class MasterKanjoKamoku(models.Model):
     kamoku_type = models.IntegerField(
         blank=False,
         null=False,
-        choices=TYPE
+        choices=MasterKanjoKamokuType.choices
     )
 
     def __str__(self):

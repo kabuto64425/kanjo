@@ -1,7 +1,20 @@
 {% extends "_base.html" %}
-{% load crispy_forms_tags %}
 {% block content %}
+{% load humanize %}{# 数字のコンマ区切り機能 #}
+{% load static %}
+{% load crispy_forms_tags %}
 <div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a class="btn btn-outline-dark" href="{% url 'index' %}">戻る</a>
+                </div>
+                <div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-12">
             <ul class="list-group">
@@ -16,8 +29,28 @@
                     </div>
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
                         <div class="col-6">
+                            {% for kanjo in hiyo_list %}
+                                <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                    <div class="col-6">
+                                        {{kanjo.name}}
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        {{kanjo.zandaka | intcomma }}
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
                         <div class="col-6">
+                            {% for kanjo in shueki_list %}
+                                <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                    <div class="col-6">
+                                        {{kanjo.name}}
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        {{kanjo.zandaka | intcomma }}
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </li>
