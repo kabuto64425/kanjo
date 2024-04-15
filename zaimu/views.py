@@ -16,6 +16,9 @@ class TaishakuSonekiView(AccountingPeriodLoginRequiredMixin, TemplateView):
         context = super().get_context_data(object_list=object_list, **kwargs)
         user = self.request.user  # ログインユーザーモデルの取得
         period = self.find_period_from_queryparam("last_day")
+        
+        context['selected'] = period[1]
+        context['select_option_list'] = self.create_period_selector_choices()
 
         filters = {
             "shiwake__owner" : user,
@@ -52,8 +55,31 @@ class TaishakuSonekiView(AccountingPeriodLoginRequiredMixin, TemplateView):
                 kanjo["zandaka"] *= -1
                 shueki_list.append(kanjo)
         
+        hiyo_zandaka_sum = sum([kanjo["zandaka"] for kanjo in hiyo_list])
+        shueki_zandaka_sum = sum([kanjo["zandaka"] for kanjo in shueki_list])
+
+        if hiyo_zandaka_sum > shueki_zandaka_sum:
+            sonshitsu = {
+                "name" : "当期純損失",
+                "zandaka" : hiyo_zandaka_sum - shueki_zandaka_sum,
+                "kamoku_type" : MasterKanjoKamokuType.SHUEKI
+            }
+            shueki_list.append(sonshitsu)
+            shueki_zandaka_sum += sonshitsu["zandaka"]
+        else:
+            rieki = {
+                "name" : "当期純利益",
+                "zandaka" : shueki_zandaka_sum - hiyo_zandaka_sum,
+                "kamoku_type" : MasterKanjoKamokuType.HIYO
+            }
+            hiyo_list.append(rieki)
+            hiyo_zandaka_sum += rieki["zandaka"]
+        
         context["hiyo_list"] = hiyo_list
         context["shueki_list"] = shueki_list
+
+        context["hiyo_zandaka_sum"] = hiyo_zandaka_sum
+        context["shueki_zandaka_sum"] = shueki_zandaka_sum
         
         return context
         
