@@ -31,6 +31,87 @@
             <ul class="list-group">
                 <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                        <div class="col-6">
+                            <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                                <div class="col text-center">
+                                    資産
+                                </div>
+                            </div>
+                            {% for kanjo in shisan_list %}
+                                <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                    <div class="col-6">
+                                        {{kanjo.name}}
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        {{kanjo.zandaka | intcomma }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-6">
+                            <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                                <div class="col text-center">
+                                    負債
+                                </div>
+                            </div>
+                            {% for kanjo in fusai_list %}
+                                <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                    <div class="col-6">
+                                        {{kanjo.name}}
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        {{kanjo.zandaka | intcomma }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
+                                <div class="col text-center">
+                                    純資産
+                                </div>
+                            </div>
+                            {% for kanjo in junshisan_list %}
+                                <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
+                                    <div class="col-6">
+                                        {{kanjo.name}}
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        {{kanjo.zandaka | intcomma }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    
+                                </div>
+                                <div class="col-6 text-right">
+                                    {{kari_zandaka_sum | intcomma }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    
+                                </div>
+                                <div class="col-6 text-right">
+                                    {{kashi_zandaka_sum | intcomma }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <ul class="list-group">
+                <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
+                    <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
                         <div class="col-6 text-center">
                             費用
                         </div>
@@ -91,4 +172,10 @@
         </div>
     </div>
 </div>
+<script>
+    search_form = document.getElementById("search_form");
+    document.getElementById("selector").addEventListener("change", function(){
+        search_form.submit();
+    });
+</script>
 {% endblock %}
