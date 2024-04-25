@@ -20,7 +20,7 @@
             <form method="get" id="search_form">
                 <select name="last_day" id="selector" class="select custom-select">
                     {% for select_option in select_option_list %}
-                        <option value="{{select_option.1|date:'Y-m-j'}}" {% if select_option.1 == selected %}selected{% endif %}>{{select_option.0|date:'Y年m月j日'}}-{{select_option.1|date:'Y年m月j日'}}</option>
+                        <option value="{{select_option.1|date:'Y-m-j'}}" {% if select_option.1 == selected_end %}selected{% endif %}>{{select_option.0|date:'Y年m月j日'}}-{{select_option.1|date:'Y年m月j日'}}</option>
                     {% endfor %}
                 </select>
             </form>
@@ -28,6 +28,7 @@
     </div>
     <div class="row">
         <div class="col-12">
+            <h3>貸借対照表({{selected_end|date:'Y年m月j日'}}時点)</h3>
             <ul class="list-group">
                 <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
@@ -109,6 +110,7 @@
     </div>
     <div class="row">
         <div class="col-12">
+            <h3>損益計算書({{selected_start|date:'Y年m月j日'}}-{{selected_end|date:'Y年m月j日'}})</h3>
             <ul class="list-group">
                 <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">

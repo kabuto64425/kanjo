@@ -26,6 +26,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('', include('allauth.urls')),
     path('zaimu/', include('zaimu.urls')),
+    path('kanjo_motocho/', include('kanjomotocho.urls')),
 ]
 
 # 追加  '__debug__/'は他のURLに影響を及ぼさないならなんでも良い

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
     'shiwake.apps.ShiwakeConfig',
     'zaimu.apps.ZaimuConfig',
+    'kanjomotocho.apps.KanjomotochoConfig',
     'utils'
 ]
 

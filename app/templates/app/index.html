@@ -9,6 +9,7 @@
                         <div class="list-group">
                             <a class="btn btn-outline-dark" href="{% url 'shiwake_list' %}">仕訳一覧</a>
                             <a class="btn btn-outline-dark" href="{% url 'taishaku_soneki' %}">貸借対照表・損益計算書</a>
+                            <a class="btn btn-outline-dark" href="{% url 'kanjo_motocho' %}">総勘定元帳</a>
                         </div>
                     {% else %}
                         <a class="btn btn-outline-dark" href="{% provider_login_url 'google' %}">ログイン</a>
