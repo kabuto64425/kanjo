@@ -3,7 +3,7 @@ from django.db.models import Prefetch
 from django.views.generic import TemplateView
 from utils.mixins import AccountingPeriodLoginRequiredMixin
 from shiwake.models import Kanjo, Shiwake
-from app.models import MasterKanjoKamokuType
+from app.models import MasterKanjoKamoku
 # Create your views here.
 
 import logging
@@ -16,13 +16,31 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
-        d = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{"kanjo_kamoku__name" : "売掛金"}).values(
-                #valuesを使用すると、クエリ実行結果はdict型のリストになる
-                "shiwake_id"
-            ).distinct()
         
+        user = self.request.user  # ログインユーザーモデルの取得
+
+        period_from_queryparam = self.find_period_from_queryparam("last_day")
+
+        context['selected'] = period_from_queryparam[1]
+        context['select_option_list'] = self.create_period_selector_choices()
+
+        master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
+        kanjo_kamoku_choices = [(None, "")]
+        kanjo_kamoku_choices += [(master_kanjo_kamoku.id, master_kanjo_kamoku) for master_kanjo_kamoku in master_kanjo_kamokus]
+
+        context['kanjo_kamoku_option_list'] = kanjo_kamoku_choices
+
+        shiwake_id_dictionaries = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{"kanjo_kamoku__name" : "売掛金"}).values(
+            #valuesを使用すると、クエリ実行結果はdict型のリストになる
+            "shiwake_id"
+        ).distinct()
+        
+
         shiwakes = Shiwake.objects.prefetch_related(Prefetch('shiwake_kanjos', to_attr='kanjo_prefetched',queryset=Kanjo.objects.select_related('kanjo_kamoku'))).filter(**{
-            "id__in" : [elm["shiwake_id"] for elm in d]
+            "owner" : user,
+            "shiwake_date__gte": period_from_queryparam[0],
+            "shiwake_date__lte": period_from_queryparam[1],
+            "id__in" : [elm["shiwake_id"] for elm in shiwake_id_dictionaries]
         }).order_by('shiwake_date')
 
         kari_tekiyo_list = []

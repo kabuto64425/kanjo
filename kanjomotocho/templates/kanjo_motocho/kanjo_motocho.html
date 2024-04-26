@@ -15,17 +15,24 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-6">
-            <form method="get" id="search_form">
+    <form method="get" id="search_form">
+        <div class="row">
+            <div class="col-6">
                 <select name="last_day" id="selector" class="select custom-select">
                     {% for select_option in select_option_list %}
-                        <option value="{{select_option.1|date:'Y-m-j'}}" {% if select_option.1 == selected_end %}selected{% endif %}>{{select_option.0|date:'Y年m月j日'}}-{{select_option.1|date:'Y年m月j日'}}</option>
+                        <option value="{{select_option.1|date:'Y-m-j'}}" {% if select_option.1 == selected %}selected{% endif %}>{{select_option.0|date:'Y年m月j日'}}-{{select_option.1|date:'Y年m月j日'}}</option>
                     {% endfor %}
                 </select>
-            </form>
+            </div>
+            <div class="col-6">
+                <select name="target_kanjo_kamoku" id="kanjo_kamoku" class="select custom-select">
+                    {% for select_option in kanjo_kamoku_option_list %}
+                        <option value="{{select_option.0}}" {% if select_option.1 == selected %}selected{% endif %}>{{select_option.1.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-    </div>
+    </form>
     <div class="row">
         <div class="col-12">
             <ul class="list-group">
@@ -92,6 +99,10 @@
     search_form = document.getElementById("search_form");
     document.getElementById("selector").addEventListener("change", function(){
         search_form.submit();
+    });
+    
+    $(document).ready(function() {
+        $('#kanjo_kamoku').select2();
     });
 </script>
 {% endblock %}
