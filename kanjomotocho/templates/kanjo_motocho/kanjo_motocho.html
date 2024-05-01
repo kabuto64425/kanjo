@@ -27,7 +27,7 @@
             <div class="col-6">
                 <select name="target_kanjo_kamoku" id="kanjo_kamoku" class="select custom-select">
                     {% for select_option in kanjo_kamoku_option_list %}
-                        <option value="{{select_option.0}}" {% if select_option.1 == selected %}selected{% endif %}>{{select_option.1.name}}</option>
+                        <option value="{{select_option.0}}" {% if select_option.0 == target_kanjo_kamoku_id %}selected{% endif %}>{{select_option.1.name}}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -39,7 +39,7 @@
                 <li class="list-group-item" style="border: 2px solid rgba(0,0,0,.125)">
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
                         <div class="col text-center">
-                            aaaa
+                            {{target_kanjo_kamoku_name}}
                         </div>
                     </div>
                     <div class="row" style="border-bottom: 4px solid rgba(0,0,0,.125)">
@@ -103,6 +103,10 @@
     
     $(document).ready(function() {
         $('#kanjo_kamoku').select2();
+        // select2の独自イベントをキャプチャしてネイティブchangeイベントを発火
+        $('#kanjo_kamoku').on('select2:select', function () {
+            search_form.submit();
+        })
     });
 </script>
 {% endblock %}

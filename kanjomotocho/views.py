@@ -24,13 +24,32 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
         context['selected'] = period_from_queryparam[1]
         context['select_option_list'] = self.create_period_selector_choices()
 
+        target_kanjo_kamoku_id = None
+
+        if self.request.GET.get("target_kanjo_kamoku") is not None:
+            try:
+                target_kanjo_kamoku_id = int(self.request.GET.get("target_kanjo_kamoku"))  # 文字列を実際にint関数で変換してみる
+            except ValueError:
+                pass
+        
+        context['target_kanjo_kamoku_id'] = target_kanjo_kamoku_id
+
+        target_kanjo_kamoku_name = ""
+        if target_kanjo_kamoku_id:
+            try:
+                target_kanjo_kamoku_name = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id).name
+                # ここに何か書く
+            except MasterKanjoKamoku.DoesNotExist:
+                 pass
+        context['target_kanjo_kamoku_name'] = target_kanjo_kamoku_name
+
         master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
         kanjo_kamoku_choices = [(None, "")]
         kanjo_kamoku_choices += [(master_kanjo_kamoku.id, master_kanjo_kamoku) for master_kanjo_kamoku in master_kanjo_kamokus]
 
         context['kanjo_kamoku_option_list'] = kanjo_kamoku_choices
 
-        shiwake_id_dictionaries = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{"kanjo_kamoku__name" : "売掛金"}).values(
+        shiwake_id_dictionaries = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{"kanjo_kamoku__id" : target_kanjo_kamoku_id}).values(
             #valuesを使用すると、クエリ実行結果はdict型のリストになる
             "shiwake_id"
         ).distinct()
@@ -55,7 +74,7 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
 
             kashi_kanjo_list = list(filter(lambda kanjo: not kanjo[0][0], kanjo_list))
 
-            kari_target_kanjo_list = list(filter(lambda kanjo: kanjo[0][1].name=="売掛金", kari_kanjo_list))
+            kari_target_kanjo_list = list(filter(lambda kanjo: kanjo[0][1].id==target_kanjo_kamoku_id, kari_kanjo_list))
 
             if kari_target_kanjo_list:
                 # グルーピングしているので、1つしか要素がないはず
@@ -75,7 +94,7 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                     })
                     pass
             
-            kashi_target_kanjo_list = list(filter(lambda kanjo: kanjo[0][1].name=="売掛金", kashi_kanjo_list))
+            kashi_target_kanjo_list = list(filter(lambda kanjo: kanjo[0][1].id==target_kanjo_kamoku_id, kashi_kanjo_list))
 
             if kashi_target_kanjo_list:
                 # グルーピングしているので、1つしか要素がないはず
