@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from utils.mixins import AccountingPeriodLoginRequiredMixin
 from shiwake.models import Kanjo, Shiwake
 from app.models import MasterKanjoKamoku
+from app.models import MasterKanjoKamokuType
 # Create your views here.
 
 import logging
@@ -34,10 +35,12 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
         
         context['target_kanjo_kamoku_id'] = target_kanjo_kamoku_id
 
+        target_kanjo_kamoku = None
         target_kanjo_kamoku_name = ""
         if target_kanjo_kamoku_id:
             try:
-                target_kanjo_kamoku_name = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id).name
+                target_kanjo_kamoku = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id)
+                target_kanjo_kamoku_name = target_kanjo_kamoku.name
                 # ここに何か書く
             except MasterKanjoKamoku.DoesNotExist:
                  pass
@@ -84,11 +87,13 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                 # 相手方の勘定リスト0はないはずだけど念のため「諸口」となるようにしておく
                 if len(kashi_kanjo_list) != 1:
                     kari_tekiyo_list.append({
+                        "date" : shiwake.shiwake_date,
                         "name" : "諸口",
                         "amount" : kari_target[1]
                     })
                 else:
                     kari_tekiyo_list.append({
+                        "date" : shiwake.shiwake_date,
                         "name" : kashi_kanjo_list[0][0][1],
                         "amount" : kari_target[1]
                     })
@@ -104,18 +109,39 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                 # 相手方の勘定リスト0はないはずだけど念のため「諸口」となるようにしておく
                 if len(kari_kanjo_list) != 1:
                     kashi_tekiyo_list.append({
+                        "date" : shiwake.shiwake_date,
                         "name" : "諸口",
                         "amount" : kashi_target[1]
                     })
                 else:
                     kashi_tekiyo_list.append({
+                        "date" : shiwake.shiwake_date,
                         "name" : kari_kanjo_list[0][0][1],
                         "amount" : kashi_target[1]
                     })
                     pass
         
+        if target_kanjo_kamoku and target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]:
+            kari_sum = sum([kari_tekiyo["amount"] for kari_tekiyo in kari_tekiyo_list])
+            kashi_sum = sum([kashi_tekiyo["amount"] for kashi_tekiyo in kashi_tekiyo_list])
+            if kari_sum > kashi_sum:
+                kashi_tekiyo_list.append({
+                    "date" : period_from_queryparam[1],
+                    "name" : "損益",
+                    "amount" : kari_sum - kashi_sum
+                })
+            elif kari_sum < kashi_sum:
+                kari_tekiyo_list.append({
+                    "date" : period_from_queryparam[1],
+                    "name" : "損益",
+                    "amount" : kashi_sum - kari_sum
+                })
+        
         context["kari_tekiyo_list"] = kari_tekiyo_list
         context["kashi_tekiyo_list"] = kashi_tekiyo_list
+
+        context["kari_sum"] = sum([kari_tekiyo["amount"] for kari_tekiyo in kari_tekiyo_list])
+        context["kashi_sum"] = sum([kashi_tekiyo["amount"] for kashi_tekiyo in kashi_tekiyo_list])
         return context
         
         

@@ -46,10 +46,13 @@
                         <div class="col-6">
                             {% for tekiyo in kari_tekiyo_list %}
                                 <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
-                                    <div class="col-6">
+                                    <div class="col-4">
+                                        {{tekiyo.date|date:'Y年m月j日'}}
+                                    </div>
+                                    <div class="col-4">
                                         {{tekiyo.name}}
                                     </div>
-                                    <div class="col-6 text-right">
+                                    <div class="col-4 text-right">
                                         {{tekiyo.amount | intcomma }}
                                     </div>
                                 </div>
@@ -58,10 +61,13 @@
                         <div class="col-6">
                             {% for tekiyo in kashi_tekiyo_list %}
                                 <div class="row" {% if not forloop.last %} style="border-bottom: 1px solid rgba(0,0,0,.125)" {% endif %}>
-                                    <div class="col-6">
+                                    <div class="col-4">
+                                        {{tekiyo.date|date:'Y年m月j日'}}
+                                    </div>
+                                    <div class="col-4">
                                         {{tekiyo.name}}
                                     </div>
-                                    <div class="col-6 text-right">
+                                    <div class="col-4 text-right">
                                         {{tekiyo.amount | intcomma }}
                                     </div>
                                 </div>
@@ -71,21 +77,21 @@
                     <div class="row">
                         <div class="col-6">
                             <div class="row">
-                                <div class="col-6">
+                                <div class="col-8">
                                     
                                 </div>
-                                <div class="col-6 text-right">
-                                    {{kari_zandaka_sum | intcomma }}
+                                <div class="col-4 text-right">
+                                    {{kari_sum | intcomma }}
                                 </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="row">
-                                <div class="col-6">
+                                <div class="col-8">
                                     
                                 </div>
-                                <div class="col-6 text-right">
-                                    {{kashi_zandaka_sum | intcomma }}
+                                <div class="col-4 text-right">
+                                    {{kashi_sum | intcomma }}
                                 </div>
                             </div>
                         </div>
