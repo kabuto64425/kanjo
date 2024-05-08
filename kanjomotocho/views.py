@@ -15,48 +15,49 @@ logger = logging.getLogger(__name__)
 class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
     template_name = "kanjo_motocho/kanjo_motocho.html"
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(object_list=object_list, **kwargs)
-        
-        user = self.request.user  # ログインユーザーモデルの取得
+    # 適用のリストを貸方、借方それぞれ作成。dict型で返す
+    def build_tekiyo_list(self, target_kanjo_kamoku):
+        if not target_kanjo_kamoku:
+            return {
+                "kari_tekiyo_list" : [],
+                "kashi_tekiyo_list" : [],
+            }
+        kari_tekiyo_list = []
+        kashi_tekiyo_list = []
 
+        target_kanjo_kamoku_id = target_kanjo_kamoku.id
+
+        user = self.request.user  # ログインユーザーモデルの取得
         period_from_queryparam = self.find_period_from_queryparam("last_day")
 
-        context['selected'] = period_from_queryparam[1]
-        context['select_option_list'] = self.create_period_selector_choices()
+        if target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.SHISAN, MasterKanjoKamokuType.FUSAI, MasterKanjoKamokuType.JUNSHISAN]:
+            a = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{
+                "kanjo_kamoku__id": target_kanjo_kamoku_id,
+                "shiwake__shiwake_date__lt": period_from_queryparam[0]
+            })
+            pre_kari_zan = sum([b.amount for b in a if b.taishaku])
+            pre_kashi_zan = sum([b.amount for b in a if not b.taishaku])
 
-        target_kanjo_kamoku_id = None
+            if pre_kari_zan > pre_kashi_zan:
+                kari_tekiyo_list.append({
+                    "date" : period_from_queryparam[0],
+                    "name" : "前期繰越",
+                    "amount" : pre_kari_zan - pre_kashi_zan
+                })
+            elif pre_kari_zan < pre_kashi_zan:
+                kashi_tekiyo_list.append({
+                    "date" : period_from_queryparam[0],
+                    "name" : "前期繰越",
+                    "amount" : pre_kashi_zan - pre_kari_zan
+                })
 
-        if self.request.GET.get("target_kanjo_kamoku") is not None:
-            try:
-                target_kanjo_kamoku_id = int(self.request.GET.get("target_kanjo_kamoku"))  # 文字列を実際にint関数で変換してみる
-            except ValueError:
-                pass
-        
-        context['target_kanjo_kamoku_id'] = target_kanjo_kamoku_id
-
-        target_kanjo_kamoku = None
-        target_kanjo_kamoku_name = ""
-        if target_kanjo_kamoku_id:
-            try:
-                target_kanjo_kamoku = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id)
-                target_kanjo_kamoku_name = target_kanjo_kamoku.name
-                # ここに何か書く
-            except MasterKanjoKamoku.DoesNotExist:
-                 pass
-        context['target_kanjo_kamoku_name'] = target_kanjo_kamoku_name
-
-        master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
-        kanjo_kamoku_choices = [(None, "")]
-        kanjo_kamoku_choices += [(master_kanjo_kamoku.id, master_kanjo_kamoku) for master_kanjo_kamoku in master_kanjo_kamokus]
-
-        context['kanjo_kamoku_option_list'] = kanjo_kamoku_choices
+            logger.info(sum([b.amount for b in a if b.taishaku]))
+            logger.info(sum([b.amount for b in a if not b.taishaku]))
 
         shiwake_id_dictionaries = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{"kanjo_kamoku__id" : target_kanjo_kamoku_id}).values(
             #valuesを使用すると、クエリ実行結果はdict型のリストになる
             "shiwake_id"
         ).distinct()
-        
 
         shiwakes = Shiwake.objects.prefetch_related(Prefetch('shiwake_kanjos', to_attr='kanjo_prefetched',queryset=Kanjo.objects.select_related('kanjo_kamoku'))).filter(**{
             "owner" : user,
@@ -64,9 +65,6 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
             "shiwake_date__lte": period_from_queryparam[1],
             "id__in" : [elm["shiwake_id"] for elm in shiwake_id_dictionaries]
         }).order_by('shiwake_date')
-
-        kari_tekiyo_list = []
-        kashi_tekiyo_list = []
 
         for shiwake in shiwakes:
             # 借方
@@ -121,27 +119,73 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                     })
                     pass
         
-        if target_kanjo_kamoku and target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]:
-            kari_sum = sum([kari_tekiyo["amount"] for kari_tekiyo in kari_tekiyo_list])
-            kashi_sum = sum([kashi_tekiyo["amount"] for kashi_tekiyo in kashi_tekiyo_list])
-            if kari_sum > kashi_sum:
-                kashi_tekiyo_list.append({
-                    "date" : period_from_queryparam[1],
-                    "name" : "損益",
-                    "amount" : kari_sum - kashi_sum
-                })
-            elif kari_sum < kashi_sum:
-                kari_tekiyo_list.append({
-                    "date" : period_from_queryparam[1],
-                    "name" : "損益",
-                    "amount" : kashi_sum - kari_sum
-                })
-        
-        context["kari_tekiyo_list"] = kari_tekiyo_list
-        context["kashi_tekiyo_list"] = kashi_tekiyo_list
+        settlement_tekiyo_name = ""
+        if target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.SHISAN, MasterKanjoKamokuType.FUSAI, MasterKanjoKamokuType.JUNSHISAN]:
+            settlement_tekiyo_name = "次期繰越"
+        elif target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]:
+            settlement_tekiyo_name = "損益"
 
-        context["kari_sum"] = sum([kari_tekiyo["amount"] for kari_tekiyo in kari_tekiyo_list])
-        context["kashi_sum"] = sum([kashi_tekiyo["amount"] for kashi_tekiyo in kashi_tekiyo_list])
+        kari_sum = sum([kari_tekiyo["amount"] for kari_tekiyo in kari_tekiyo_list])
+        kashi_sum = sum([kashi_tekiyo["amount"] for kashi_tekiyo in kashi_tekiyo_list])
+        if kari_sum > kashi_sum:
+            kashi_tekiyo_list.append({
+                "date" : period_from_queryparam[1],
+                "name" : settlement_tekiyo_name,
+                "amount" : kari_sum - kashi_sum
+            })
+        elif kari_sum < kashi_sum:
+            kari_tekiyo_list.append({
+                "date" : period_from_queryparam[1],
+                "name" : settlement_tekiyo_name,
+                "amount" : kashi_sum - kari_sum
+            })
+
+        return {
+            "kari_tekiyo_list" : kari_tekiyo_list,
+            "kashi_tekiyo_list" : kashi_tekiyo_list,
+        }
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(object_list=object_list, **kwargs)
+        
+        period_from_queryparam = self.find_period_from_queryparam("last_day")
+
+        context['selected'] = period_from_queryparam[1]
+        context['select_option_list'] = self.create_period_selector_choices()
+
+        target_kanjo_kamoku_id = None
+
+        if self.request.GET.get("target_kanjo_kamoku") is not None:
+            try:
+                target_kanjo_kamoku_id = int(self.request.GET.get("target_kanjo_kamoku"))  # 文字列を実際にint関数で変換してみる
+            except ValueError:
+                pass
+        
+        context['target_kanjo_kamoku_id'] = target_kanjo_kamoku_id
+
+        target_kanjo_kamoku = None
+        target_kanjo_kamoku_name = ""
+        if target_kanjo_kamoku_id:
+            try:
+                target_kanjo_kamoku = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id)
+                target_kanjo_kamoku_name = target_kanjo_kamoku.name
+            except MasterKanjoKamoku.DoesNotExist:
+                 pass
+        context['target_kanjo_kamoku_name'] = target_kanjo_kamoku_name
+
+        master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
+        kanjo_kamoku_choices = [(None, "")]
+        kanjo_kamoku_choices += [(master_kanjo_kamoku.id, master_kanjo_kamoku) for master_kanjo_kamoku in master_kanjo_kamokus]
+
+        context['kanjo_kamoku_option_list'] = kanjo_kamoku_choices
+
+        tekiyo_list = self.build_tekiyo_list(target_kanjo_kamoku)
+        
+        context["kari_tekiyo_list"] = tekiyo_list["kari_tekiyo_list"]
+        context["kashi_tekiyo_list"] = tekiyo_list["kashi_tekiyo_list"]
+
+        context["kari_sum"] = sum([kari_tekiyo["amount"] for kari_tekiyo in tekiyo_list["kari_tekiyo_list"]])
+        context["kashi_sum"] = sum([kashi_tekiyo["amount"] for kashi_tekiyo in tekiyo_list["kashi_tekiyo_list"]])
         return context
         
         
