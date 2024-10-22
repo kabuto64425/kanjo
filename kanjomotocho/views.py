@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
     template_name = "kanjo_motocho/kanjo_motocho.html"
 
-    def shiwake_soneki(self):
+    def shiwake_soneki(self, kari_tekiyo_list, kashi_tekiyo_list):
         period_from_queryparam = self.find_period_from_queryparam("last_day")
         user = self.request.user  # ログインユーザーモデルの取得
 
@@ -56,6 +56,11 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
         
         hiyo_zandaka_sum = sum([kanjo["zandaka"] for kanjo in hiyo_list])
         shueki_zandaka_sum = sum([kanjo["zandaka"] for kanjo in shueki_list])
+
+        if hiyo_zandaka_sum > shueki_zandaka_sum:
+            pass
+        else:
+            pass
 
 
     # 適用のリストを貸方、借方それぞれ作成。dict型で返す
@@ -161,6 +166,8 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                         "amount" : kashi_target[1]
                     })
                     pass
+        
+
         
         settlement_tekiyo_name = ""
         if target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.SHISAN, MasterKanjoKamokuType.FUSAI, MasterKanjoKamokuType.JUNSHISAN]:
