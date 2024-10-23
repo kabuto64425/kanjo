@@ -5,6 +5,7 @@ from utils.mixins import AccountingPeriodLoginRequiredMixin
 from shiwake.models import Kanjo, Shiwake
 from app.models import MasterKanjoKamoku
 from app.models import MasterKanjoKamokuType
+from django.db.models import Q
 # Create your views here.
 
 import logging
@@ -15,54 +16,6 @@ logger = logging.getLogger(__name__)
 class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
     template_name = "kanjo_motocho/kanjo_motocho.html"
 
-    def shiwake_soneki(self, kari_tekiyo_list, kashi_tekiyo_list):
-        period_from_queryparam = self.find_period_from_queryparam("last_day")
-        user = self.request.user  # ログインユーザーモデルの取得
-
-        filters = {
-            "shiwake__owner" : user,
-            "shiwake__shiwake_date__gte": period_from_queryparam[0],
-            "shiwake__shiwake_date__lte": period_from_queryparam[1],
-            "kanjo_kamoku__kamoku_type__in": [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]
-        }
-
-        qs = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').annotate(
-                # 借方なら+amount
-                # 貸方なら-amount
-                # を保存する列taishaku_amount
-                taishaku_amount = Case(
-                    When(taishaku=True, then=F("amount")),
-                    default=-F("amount")
-                )
-            ).filter(**filters).values(
-                #valuesを使用すると、クエリ実行結果はdict型のリストになる
-                "kanjo_kamoku", "kanjo_kamoku__name", "kanjo_kamoku__kamoku_type"
-            ).annotate(
-                # taishaku_amountを勘定科目ごとで集計した列zandaka
-        	    zandaka = Sum('taishaku_amount'),
-                name = F("kanjo_kamoku__name"),
-                kamoku_type = F("kanjo_kamoku__kamoku_type")
-            )
-        
-        hiyo_list = []
-        shueki_list = []
-
-        for kanjo in qs:
-            if kanjo["kamoku_type"] == MasterKanjoKamokuType.HIYO:
-                hiyo_list.append(kanjo)
-            elif kanjo["kamoku_type"] == MasterKanjoKamokuType.SHUEKI:
-                kanjo["zandaka"] *= -1
-                shueki_list.append(kanjo)
-        
-        hiyo_zandaka_sum = sum([kanjo["zandaka"] for kanjo in hiyo_list])
-        shueki_zandaka_sum = sum([kanjo["zandaka"] for kanjo in shueki_list])
-
-        if hiyo_zandaka_sum > shueki_zandaka_sum:
-            pass
-        else:
-            pass
-
-
     # 適用のリストを貸方、借方それぞれ作成。dict型で返す
     def build_tekiyo_list(self, target_kanjo_kamoku):
         if not target_kanjo_kamoku:
@@ -70,19 +23,33 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                 "kari_tekiyo_list" : [],
                 "kashi_tekiyo_list" : [],
             }
+        
         kari_tekiyo_list = []
         kashi_tekiyo_list = []
 
         target_kanjo_kamoku_id = target_kanjo_kamoku.id
+        target_kanjo_kamoku_name = target_kanjo_kamoku.name
+
+        is_kurikoshirieki_joyo = True if target_kanjo_kamoku_name == "繰越利益剰余金" else False
 
         user = self.request.user  # ログインユーザーモデルの取得
         period_from_queryparam = self.find_period_from_queryparam("last_day")
 
         if target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.SHISAN, MasterKanjoKamokuType.FUSAI, MasterKanjoKamokuType.JUNSHISAN]:
-            a = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(**{
+            q = Q(**{
+                "shiwake__owner" : user,
                 "kanjo_kamoku__id": target_kanjo_kamoku_id,
                 "shiwake__shiwake_date__lt": period_from_queryparam[0]
             })
+
+            if is_kurikoshirieki_joyo:
+                q |= Q(**{
+                    "shiwake__owner" : user,
+                    "kanjo_kamoku__kamoku_type__in": [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI],
+                    "shiwake__shiwake_date__lt": period_from_queryparam[0]
+                })
+
+            a = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').filter(q)
             pre_kari_zan = sum([b.amount for b in a if b.taishaku])
             pre_kashi_zan = sum([b.amount for b in a if not b.taishaku])
 
@@ -143,7 +110,6 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                         "name" : kashi_kanjo_list[0][0][1],
                         "amount" : kari_target[1]
                     })
-                    pass
             
             kashi_target_kanjo_list = list(filter(lambda kanjo: kanjo[0][1].id==target_kanjo_kamoku_id, kashi_kanjo_list))
 
@@ -165,9 +131,39 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                         "name" : kari_kanjo_list[0][0][1],
                         "amount" : kashi_target[1]
                     })
-                    pass
         
+        if is_kurikoshirieki_joyo:
+            qs = Kanjo.objects.select_related('shiwake').select_related('kanjo_kamoku').annotate(
+                    # 借方なら+amount
+                    # 貸方なら-amount
+                    # を保存する列taishaku_amount
+                    taishaku_amount = Case(
+                        When(taishaku=True, then=F("amount")),
+                        default=-F("amount")
+                    )
+                ).filter(**{
+                    "shiwake__owner" : user,
+                    "shiwake__shiwake_date__gte": period_from_queryparam[0],
+                    "shiwake__shiwake_date__lte": period_from_queryparam[1],
+                    "kanjo_kamoku__kamoku_type__in": [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]
+                }).aggregate(Sum('taishaku_amount'))
+            soneki_result = qs["taishaku_amount__sum"]
 
+            if soneki_result <= 0:
+                kashi_tekiyo_list.append({
+                    "date" : period_from_queryparam[1],
+                    "name" : "当期純利益",
+                    "amount" : -soneki_result
+                })
+            else:
+                kari_tekiyo_list.append({
+                    "date" : period_from_queryparam[1],
+                    "name" : "当期純損失",
+                    "amount" : soneki_result
+                })
+
+            logger.info(soneki_result)
+            
         
         settlement_tekiyo_name = ""
         if target_kanjo_kamoku.kamoku_type in [MasterKanjoKamokuType.SHISAN, MasterKanjoKamokuType.FUSAI, MasterKanjoKamokuType.JUNSHISAN]:
@@ -220,7 +216,7 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                 target_kanjo_kamoku = MasterKanjoKamoku.objects.get(id=target_kanjo_kamoku_id)
                 target_kanjo_kamoku_name = target_kanjo_kamoku.name
             except MasterKanjoKamoku.DoesNotExist:
-                 pass
+                pass
         context['target_kanjo_kamoku_name'] = target_kanjo_kamoku_name
 
         master_kanjo_kamokus = MasterKanjoKamoku.objects.all()
