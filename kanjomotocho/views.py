@@ -148,6 +148,8 @@ class KanjoMotochoView(AccountingPeriodLoginRequiredMixin, TemplateView):
                     "kanjo_kamoku__kamoku_type__in": [MasterKanjoKamokuType.HIYO, MasterKanjoKamokuType.SHUEKI]
                 }).aggregate(Sum('taishaku_amount'))
             soneki_result = qs["taishaku_amount__sum"]
+            # 比較の演算子を使うので、Noneだとエラーになるから
+            soneki_result = 0 if soneki_result is None else soneki_result
 
             if soneki_result <= 0:
                 kashi_tekiyo_list.append({
